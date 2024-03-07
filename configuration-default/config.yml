@@ -44,7 +44,7 @@ logger:
   # volumen /logs will not be mounted ...
   category:           '${QVS_LOGGER_CATEGORY:QuoteVerificationService}'
   levelFile:          '${QVS_LOGGER_LEVEL_FILE:off}' # You have to mount a directory with r/w rights
-  levelConsole:       '${QVS_LOGGER_LEVEL_CONSOLE:info}'
+  levelConsole:       '${QVS_LOGGER_LEVEL_CONSOLE:trace}'
   fileName:           '${QVS_LOGGER_FILE_NAME:}' # You have to mount a directory with r/w rights
   multilineErrorLog:  '${QVS_LOGGER_MULTILINE_ERROR_LOG:true}'
 
@@ -71,7 +71,7 @@ pcsClient:
   retries:             '${QVS_PCS_CLIENT_RETRIES:1}'
   initialInterval:     '${QVS_PCS_CLIENT_INITIAL_INTERVAL:100}'
   factor:              '${QVS_PCS_CLIENT_INTERVAL_FACTOR:1}'
-  caCertDirectories:   '${QVS_PCS_CLIENT_CA_CERT_DIRECTORIES:certificates/internal_ca/}'
+  caCertDirectories:   '${QVS_PCS_CLIENT_CA_CERT_DIRECTORIES:certificates}'
   tlsClientType:       '${QVS_PCS_CLIENT_TLS_CLIENT_TYPE:TLS}'
   proxy:               '${QVS_PCS_CLIENT_PROXY:}'
   servername:          '${QVS_PCS_CLIENT_SERVERNAME:}'
@@ -81,7 +81,7 @@ crlClient:
   initialInterval:     '${QVS_CRL_CLIENT_INITIAL_INTERVAL:100}'
   factor:              '${QVS_CRL_CLIENT_INTERVAL_FACTOR:3}'
   proxy:               '${QVS_CRL_CLIENT_PROXY:}'
-  caCertDirectories:   '${QVS_CRL_CLIENT_CA_CERT_DIRECTORIES:certificates/internal_ca/}'
+  caCertDirectories:   '${QVS_CRL_CLIENT_CA_CERT_DIRECTORIES:certificates}'
 
 cache:
   ttl:         '${QVS_CACHE_TTL:900}'

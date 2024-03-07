@@ -40,7 +40,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" || exit 1; pwd)"
 # Check if QVL path has been provided
 if [ -z "$1" ]
   then
-    QVL_PATH="$(cd "$(dirname "$SCRIPT_DIR"/../QVL/Src)" || exit 2; pwd)/Src"
+    QVL_PATH="$(cd "$(dirname "$SCRIPT_DIR"/QVL/Src)" || exit 2; pwd)/Src"
 else
   QVL_PATH="$(cd "$(dirname "$1")" || exit 2; pwd)/$(basename "$1")"
 fi

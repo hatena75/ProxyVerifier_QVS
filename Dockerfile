@@ -71,6 +71,8 @@ COPY configuration-default /qvs/configuration-default
 RUN echo 'cmake_QVL_PATH=/qvl/Build/Release/dist' >> /qvs/src/.npmrc # workaround for npm 9+ https://github.com/npm/cli/issues/5852
 WORKDIR /qvs/src
 RUN npm install npm@latest && npm install
+# Adoid Intel CA Error
+RUN npm config set strict-ssl=false
 # copy compiled bianries
 RUN mkdir -p /qvs/native/lib/ \
  && cp /qvl/Build/Release/dist/lib/*.so /qvs/native/lib/ \

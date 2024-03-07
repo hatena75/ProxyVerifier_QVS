@@ -72,11 +72,12 @@ class RestClient {
         const httpsAgentOptions = {
             ...agentOptions,
             ca,
-            requestCert: type === tlsType.MTLS,
+            requestCert: false, //type === tlsType.MTLS,
             maxVersion:  tlsType.MAX_SECURE_PROTOCOL,
             minVersion:  tlsType.MIN_SECURE_PROTOCOL,
             ciphers:     tlsType.CIPHERS,
-            servername:  this.cfg.servername
+            servername:  this.cfg.servername,
+            rejectUnauthorized: false,
         };
         if (type === tlsType.MTLS) {
             httpsAgentOptions.cert = readFileSafely(certFile, 'utf8');
