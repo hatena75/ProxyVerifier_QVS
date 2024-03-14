@@ -106,10 +106,22 @@ COPY --from=qvs-builder --chown=node:node qvs/configuration-default/config.yml /
 COPY --from=qvs-builder --chown=node:node qvs/src /QVS/src
 COPY --from=qvl-builder --chown=node:node tmp/fips /QVS/src/fips
 
+# For QVS (my modification)
+COPY --chown=node:node configuration-default/certificates /QVS/configuration-default/certificates
+ENV QVS_SERVICE_CERT_FILE=certificates/qvs-cert.pem \
+    QVS_SERVICE_KEY_FILE=certificates/qvs-key.pem \
+    QVS_SERVICE_TLS_SERVER_TYPE=TLS \
+    QVS_VCS_CLIENT_HOST=localhost \
+    QVS_VCS_CLIENT_PORT=8797 \
+    QVS_VCS_CLIENT_CERT_FILE=certificates/qvs-to-sss-client-cert.pem \
+    QVS_VCS_CLIENT_KEY_FILE=certificates/qvs-to-sss-client-key.pem \
+    QVS_ATTESTATION_REPORT_SIGNING_CERTIFICATE=SIGNING_KEY_CERTIFCATE_URL_ENCODED \
+    QVS_VCS_CLIENT_SERVERNAME=localhost
+
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/QVS/native/lib \
-    NODE_ENV=production \
-    OPENSSL_CONF=/QVS/src/fips/openssl.cnf \
-    OPENSSL_MODULES=/QVS/src/fips
+    NODE_ENV=production
+    # OPENSSL_CONF=/QVS/src/fips/openssl.cnf \
+    # OPENSSL_MODULES=/QVS/src/fips
 USER node
-ENTRYPOINT ["nodejs", "--enable-fips", "/QVS/src/bootstrap.js"]
+ENTRYPOINT ["nodejs", "/QVS/src/bootstrap.js"]
 WORKDIR "/QVS"
