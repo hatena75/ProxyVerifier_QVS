@@ -1,5 +1,9 @@
 sgx.enclave_size = "4G"
-sgx.max_threads = 8
+sgx.max_threads = 16
+sgx.preheat_enclave = true
+libos.check_invalid_pointers = false
+sys.insecure__allow_eventfd = true
+sys.enable_extra_runtime_domain_names_conf = true
 
 sgx.trusted_files = [
   "file:/gramine/app_files/entrypoint.manifest",  # unused entry, only to test merging of manifests

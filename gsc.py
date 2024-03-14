@@ -333,8 +333,8 @@ def gsc_build(args):
     # using the user-provided config file with info on OS distro, Gramine version and SGX driver
     # and other env configurations generated above
     build_template = env.get_template(f'{distro}/Dockerfile.build.template')
-    with open(tmp_build_path / 'Dockerfile.build', 'w') as dockerfile:
-        dockerfile.write(build_template.render())
+    # with open(tmp_build_path / 'Dockerfile.build', 'w') as dockerfile:
+    #     dockerfile.write(build_template.render())
 
     # generate apploader.sh from Jinja-style templates/apploader.template
     with open(tmp_build_path / 'apploader.sh', 'w') as apploader:
