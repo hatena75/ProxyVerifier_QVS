@@ -67,7 +67,7 @@ fi
 
 # Build Docker Image
 function buildDocker() {
-  docker build "$SCRIPT_DIR" --network host --no-cache -t qvs
+  docker build "$SCRIPT_DIR" --network host -t qvs # --no-cache
 }
 
 if ! buildDocker; then

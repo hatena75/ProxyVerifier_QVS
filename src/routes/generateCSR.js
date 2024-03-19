@@ -33,50 +33,28 @@
 
 const Router = require('koa-router');
 
-/* Place to import all nested routers below */
-const healthRouter = require('./health').createRouter();
-const verifyAttestationEvidenceRouter = require('./v1/verifyAttestationEvidence').createRouter();
-// const generateCSRRouter = require('./generateCSR').createRouter();
+// const { verifyAttestationEvidence } = require('../../handlers/verifyAttestationEvidence');
 
-/* Place to compose service API below */
-const apiRouter = new Router();
+/**
+ * @typedef Router
+ * @type {object}
+ * @property {function} routes
+ * @property {function} allowedMethods
+ */
 
-/*
-    #swagger.start
-    #swagger.path = '/health'
-    #swagger.method = 'get'
-    #swagger.description = 'Checks communication with dependent services'
-    #swagger.produces = ["application/json"]
-    #swagger.responses[200] = {
-        schema: {
-            '$ref': '#/definitions/PositiveHealthReport'
-        },
-        description: 'Health report',
-        headers: {
-            'Request-ID': {
-                description: 'Request ID',
-                type: 'string'
-            }
-        }
-    }
-    #swagger.responses[503] = {
-        schema: {
-            '$ref': '#/definitions/NegativeHealthReport'
-        },
-        description: 'Health report',
-        headers: {
-            'Request-ID': {
-                description: 'Request ID',
-                type: 'string'
-            }
-        }
-    }
-    #swagger.end
-*/
-apiRouter.use('/health', healthRouter.routes(), healthRouter.allowedMethods());
+/**
+ * Creates new router
+ * @returns {Router}
+ */
+function createRouter() {
+    const router = new Router();
+    router.get('/', async (ctx) => {
+        console.log('start generate CSR')
+        ctx.body = 'Hello World!!';
+    });
+    return router;
+}
 
-apiRouter.use('/attestation/sgx/dcap/v1/report', verifyAttestationEvidenceRouter.routes(), verifyAttestationEvidenceRouter.allowedMethods());
-
-// apiRouter.use('/generateCSR', generateCSRRouter.routes(), generateCSRRouter.allowedMethods());
-
-module.exports = apiRouter;
+module.exports = {
+    createRouter
+};
