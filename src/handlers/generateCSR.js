@@ -31,30 +31,17 @@
 
 'use strict';
 
-const Router = require('koa-router');
-
-// const { verifyAttestationEvidence } = require('../../handlers/verifyAttestationEvidence');
-
 /**
- * @typedef Router
- * @type {object}
- * @property {function} routes
- * @property {function} allowedMethods
+ * Handler for generate CSR endpoint
+ * @param {Object} ctx - koa context
+ * @returns
  */
-
-/**
- * Creates new router
- * @returns {Router}
- */
-function createRouter() {
-    const router = new Router();
-    router.get('/', async (ctx) => {
-        console.log('start generate CSR')
-        ctx.body = 'Hello World!!';
-    });
-    return router;
+async function generateCSR(ctx) {
+    console.log('start generate CSR');
+    ctx.body = 'Hello World!!';
+    ctx.status = 200;
 }
 
 module.exports = {
-    createRouter
+    generateCSR
 };

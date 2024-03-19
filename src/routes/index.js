@@ -36,7 +36,7 @@ const Router = require('koa-router');
 /* Place to import all nested routers below */
 const healthRouter = require('./health').createRouter();
 const verifyAttestationEvidenceRouter = require('./v1/verifyAttestationEvidence').createRouter();
-// const generateCSRRouter = require('./generateCSR').createRouter();
+//const generateCSRRouter = require('./generateCSR').createRouter();
 
 /* Place to compose service API below */
 const apiRouter = new Router();
@@ -77,6 +77,6 @@ apiRouter.use('/health', healthRouter.routes(), healthRouter.allowedMethods());
 
 apiRouter.use('/attestation/sgx/dcap/v1/report', verifyAttestationEvidenceRouter.routes(), verifyAttestationEvidenceRouter.allowedMethods());
 
-// apiRouter.use('/generateCSR', generateCSRRouter.routes(), generateCSRRouter.allowedMethods());
+//apiRouter.use('/generateCSR', generateCSRRouter.routes(), generateCSRRouter.allowedMethods());
 
 module.exports = apiRouter;

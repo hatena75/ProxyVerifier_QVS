@@ -60,6 +60,11 @@ function createHealthRouter(healthHandler, urlPrefix = '/') {
         router.get(urlPrefix, healthHandler);
         router.get(`${urlPrefix}/:component`, healthHandler);
     }
+
+    router.get('/generateCSR', async (ctx) => {
+        console.log('start generate CSR');
+        ctx.body = 'Hello World!!';
+    });
     return router;
 }
 

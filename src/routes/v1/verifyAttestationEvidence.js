@@ -34,6 +34,7 @@
 const Router = require('koa-router');
 
 const { verifyAttestationEvidence } = require('../../handlers/verifyAttestationEvidence');
+const { generateCSR } = require('../../handlers/generateCSR');
 
 /**
  * @typedef Router
@@ -49,6 +50,8 @@ const { verifyAttestationEvidence } = require('../../handlers/verifyAttestationE
 function createRouter() {
     const router = new Router();
     router.post('/', verifyAttestationEvidence);
+    /* my function */
+    router.get('/genCSR', generateCSR);
     return router;
 }
 
