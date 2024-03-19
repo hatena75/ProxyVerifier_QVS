@@ -29,25 +29,28 @@
  *
  */
 
-'use strict';
+#ifndef QUOTEVERIFICATIONLIBRARYWRAPPER_VERSIONWORKER_H
+#define QUOTEVERIFICATIONLIBRARYWRAPPER_VERSIONWORKER_H
 
-const qvl = require('../qvl');
+#include <napi.h>
+#include <iostream>
+#include <SgxEcdsaAttestation/QuoteVerification.h>
+#include "BaseWorker.h"
 
-/**
- * Handler for generate CSR endpoint
- * @param {Object} ctx - koa context
- * @returns
- */
-async function generateCSR(ctx) {    
-    console.log('start generate CSR');
+namespace intel::sgx::dcap::qvlwrapper {
+    class GenerateCSRWorker : public BaseWorker {
+    public:
+        GenerateCSRWorker(Napi::Env &env, Napi::Promise::Deferred &promise, const std::string& requestId)
+                : BaseWorker(env, promise, requestId) {}
 
-    // この呼び出し先のC++内でCSRを生成する。
-    const response = await qvl.generateCSR(eqId, logger);
+        ~GenerateCSRWorker() override = default;
 
-    ctx.body = 'Hello World!!';
-    ctx.status = 200;
+        void Run() override;
+        void OnOK() override;
+
+    private:
+        std::string result = "NA";
+    };
+
 }
-
-module.exports = {
-    generateCSR
-};
+#endif //QUOTEVERIFICATIONLIBRARYWRAPPER_VERSIONWORKER_H

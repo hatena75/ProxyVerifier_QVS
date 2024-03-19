@@ -115,11 +115,24 @@ async function verifyQuote(reqId, quote, pckCertPem, tcbInfo, qeIdentity, pckCer
 function loggerSetup(name, consoleLogLevel, fileLogLevel, fileName, pattern) {
     wrapper.loggerSetup(name, consoleLogLevel, fileLogLevel, fileName, pattern);
 }
+
+async function generateCSR(reqId, logger) {
+    try {
+        const result = await wrapper.generateCSR(reqId);
+        return { body: { status: 'OK', version: result.result } };
+    }
+    catch (e) {
+        logger.error('Failed to retrieve version from QVL', e);
+        return { body: { status: 'FAILED', version: 'NA' } };
+    }
+}
+
 module.exports = {
     getVersion,
     getCertificationData,
     getPckCertificateData,
     getCrlDistributionPoint,
     verifyQuote,
-    loggerSetup
+    loggerSetup,
+    generateCSR
 };

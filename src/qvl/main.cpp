@@ -37,6 +37,7 @@
 #include "VersionWorker.h"
 #include "GetCrlDistributionPointWorker.h"
 #include "VerifyQuoteWorker.h"
+#include "GenerateCSRWorker.h"
 
 namespace intel::sgx::dcap::qvlwrapper {
 
@@ -53,6 +54,18 @@ Napi::Value GetCertificationData(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value Version(const Napi::CallbackInfo &info) {
+    Napi::Env env = info.Env();
+
+    auto deferred = Napi::Promise::Deferred::New(env);
+
+    auto requestId = std::string(info[0].As<Napi::String>());
+    auto worker = new VersionWorker(env, deferred, requestId);
+
+    worker->Queue();
+    return deferred.Promise();
+}
+
+Napi::Value GenerateCSR(const Napi::CallbackInfo &info) {
     Napi::Env env = info.Env();
 
     auto deferred = Napi::Promise::Deferred::New(env);
@@ -144,6 +157,9 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
 
     exports.Set(Napi::String::New(env, "loggerSetup"),
                 Napi::Function::New(env, LoggerSetup));
+    
+    exports.Set(Napi::String::New(env, "generateCSR"),
+                Napi::Function::New(env, GenerateCSR));
 
     return exports;
 }
