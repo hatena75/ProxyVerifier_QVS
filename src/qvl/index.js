@@ -116,13 +116,13 @@ function loggerSetup(name, consoleLogLevel, fileLogLevel, fileName, pattern) {
     wrapper.loggerSetup(name, consoleLogLevel, fileLogLevel, fileName, pattern);
 }
 
-async function generateCSR(reqId, logger) {
+async function generateCSR(reqId, easylogger) {
     try {
         const result = await wrapper.generateCSR(reqId);
         return { body: { status: 'OK', version: result.result } };
     }
     catch (e) {
-        logger.error('Failed to retrieve version from QVL', e);
+        easylogger = 'Failed to generateCSR';
         return { body: { status: 'FAILED', version: 'NA' } };
     }
 }

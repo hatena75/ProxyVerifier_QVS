@@ -71,7 +71,7 @@ Napi::Value GenerateCSR(const Napi::CallbackInfo &info) {
     auto deferred = Napi::Promise::Deferred::New(env);
 
     auto requestId = std::string(info[0].As<Napi::String>());
-    auto worker = new VersionWorker(env, deferred, requestId);
+    auto worker = new GenerateCSRWorker(env, deferred, requestId);
 
     worker->Queue();
     return deferred.Promise();

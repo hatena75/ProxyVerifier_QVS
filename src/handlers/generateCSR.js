@@ -32,6 +32,8 @@
 'use strict';
 
 const qvl = require('../qvl');
+//const config = require('../configLoader').getConfig();
+//const logger = require('../logger')(config);
 
 /**
  * Handler for generate CSR endpoint
@@ -40,11 +42,12 @@ const qvl = require('../qvl');
  */
 async function generateCSR(ctx) {    
     console.log('start generate CSR');
+    let easylogger;
+    // The CSR is generated within C++ of this caller.
+    const response = await qvl.generateCSR('genCSR-request-id', easylogger);
+    if(response.body.status != 'OK') console.log(easylogger);
 
-    // この呼び出し先のC++内でCSRを生成する。
-    const response = await qvl.generateCSR(eqId, logger);
-
-    ctx.body = 'Hello World!!';
+    ctx.body = response.body.version;
     ctx.status = 200;
 }
 
