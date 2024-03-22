@@ -8,3 +8,8 @@ sys.enable_extra_runtime_domain_names_conf = true
 sgx.trusted_files = [
   "file:/gramine/app_files/entrypoint.manifest",  # unused entry, only to test merging of manifests
 ]
+
+sgx.allowed_files = [
+  "file:/QVS/delegation.csr",
+  "file:/QVS/delegationkey.pem",
+]
