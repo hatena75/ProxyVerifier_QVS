@@ -36,6 +36,7 @@
 #include <iostream>
 #include <SgxEcdsaAttestation/QuoteVerification.h>
 #include "BaseWorker.h"
+#include <openssl/evp.h>
 
 namespace intel::sgx::dcap::qvlwrapper {
     class GenerateCSRWorker : public BaseWorker {
@@ -47,6 +48,8 @@ namespace intel::sgx::dcap::qvlwrapper {
 
         void Run() override;
         void OnOK() override;
+
+        EVP_PKEY* ec_delegation_pkey = NULL;
 
     private:
         std::string result = "NA";

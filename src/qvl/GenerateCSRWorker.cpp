@@ -69,9 +69,6 @@ namespace intel::sgx::dcap::qvlwrapper {
             EVP_PKEY_CTX_free(ctx);
             //return SGX_QL_ERROR_UNEXPECTED;
         }
-        // secret key
-        EVP_PKEY* ec_delegation_pkey;
-        ec_delegation_pkey = NULL; //general structure of asynmetric pair of keys.
     #if OPENSSL_VERSION_NUMBER < 0x30000000
         if (EVP_PKEY_keygen(ctx, &ec_delegation_pkey) <= 0)
     #else //new API EVP_PKEY_generate() since 3.0
@@ -83,24 +80,23 @@ namespace intel::sgx::dcap::qvlwrapper {
             //return SGX_QL_ERROR_UNEXPECTED;
         }
         // public key - string
-        int len = i2d_PUBKEY(ec_delegation_pkey, NULL);
-        unsigned char *buf = (unsigned char *) malloc (len + 1);
-        if (!buf)
-        {
-            //printf("Failed in calling malloc()\n");
-            EVP_PKEY_CTX_free(ctx);
-            //return SGX_QL_ERROR_INVALID_PARAMETER;
-        }
-        unsigned char *tbuf = buf;
-        i2d_PUBKEY(ec_delegation_pkey, &tbuf);
-
+        // int len = i2d_PUBKEY(ec_delegation_pkey, NULL);
+        // unsigned char *buf = (unsigned char *) malloc (len + 1);
+        // if (!buf)
+        // {
+        //     //printf("Failed in calling malloc()\n");
+        //     EVP_PKEY_CTX_free(ctx);
+        //     //return SGX_QL_ERROR_INVALID_PARAMETER;
+        // }
+        // unsigned char *tbuf = buf;
+        // i2d_PUBKEY(ec_delegation_pkey, &tbuf);
         // print public key
-        printf ("{\"public\":\"");
-        int i;
-        for (i = 0; i < len; i++) {
-            printf("%02x", (unsigned char) buf[i]);
-        }
-        printf("\"}\n");
+        // printf ("{\"public\":\"");
+        // int i;
+        // for (i = 0; i < len; i++) {
+        //     printf("%02x", (unsigned char) buf[i]);
+        // }
+        // printf("\"}\n");
 
         //Create CSR
         X509_REQ* p_x509_req = NULL;
@@ -122,8 +118,9 @@ namespace intel::sgx::dcap::qvlwrapper {
             printf("X509_REQ_sign error\n");
         }
 
-        if(X509_REQ_verify(p_x509_req, ec_delegation_pkey) != 1) printf("X509_REQ_verify error\n");
+        //if(X509_REQ_verify(p_x509_req, ec_delegation_pkey) != 1) printf("X509_REQ_verify error\n");
 
+        //Output csr to file
         FILE *csr_file;
         csr_file = fopen("delegation.csr", "wb");
         if(csr_file == NULL) printf("csr_file error\n");
@@ -132,28 +129,28 @@ namespace intel::sgx::dcap::qvlwrapper {
         }
         fclose(csr_file);
 
-        FILE *key_file;
-        key_file = fopen("delegationkey.pem", "wb");
-        if (!PEM_write_PrivateKey(key_file, ec_delegation_pkey, NULL, NULL, 0, 0, NULL)) {
-            /* Error */
-        }
-        fclose(key_file);
+        // FILE *key_file;
+        // key_file = fopen("delegationkey.pem", "wb");
+        // if (!PEM_write_PrivateKey(key_file, ec_delegation_pkey, NULL, NULL, 0, 0, NULL)) {
+        //     printf("PEM_write_PrivateKey error\n");
+        // }
+        // fclose(key_file);
 
         // print CSR
-        unsigned char *buf_csr = (unsigned char *) malloc (cert_size + 1);
-        if (!buf_csr)
-        {
-            //printf("Failed in calling malloc()\n");
-            EVP_PKEY_CTX_free(ctx);
-            //return SGX_QL_ERROR_INVALID_PARAMETER;
-        }
-        unsigned char *tbuf_csr = buf_csr;
-        i2d_X509_REQ(p_x509_req, &tbuf_csr);
-        printf ("{\"CSR\":\"");
-        for (i = 0; i < len; i++) {
-            printf("%02x", (unsigned char) buf_csr[i]);
-        }
-        printf("\"}\n");
+        // unsigned char *buf_csr = (unsigned char *) malloc (cert_size + 1);
+        // if (!buf_csr)
+        // {
+        //     //printf("Failed in calling malloc()\n");
+        //     EVP_PKEY_CTX_free(ctx);
+        //     //return SGX_QL_ERROR_INVALID_PARAMETER;
+        // }
+        // unsigned char *tbuf_csr = buf_csr;
+        // i2d_X509_REQ(p_x509_req, &tbuf_csr);
+        // printf ("{\"CSR\":\"");
+        // for (i = 0; i < len; i++) {
+        //     printf("%02x", (unsigned char) buf_csr[i]);
+        // }
+        // printf("\"}\n");
 
         //Return CSR (now delegation_key → p_x509_req {need to size})
         // if (memcpy_s(delegation_key, (size_t)delegation_key_size, buf, (size_t)len) != 0) {
@@ -161,10 +158,10 @@ namespace intel::sgx::dcap::qvlwrapper {
         // }
         //result = p_x509_req;
 
-        // EVP_PKEY_CTX_free(ctx);
-        // X509_REQ_free(p_x509_req);
-        // p_x509_req = NULL;
-        free(buf);
+        EVP_PKEY_CTX_free(ctx);
+        X509_REQ_free(p_x509_req);
+        p_x509_req = NULL;
+        // free(buf);
 
         // private key - string
         //len = i2d_PrivateKey(ec_delegation_pkey, NULL);
