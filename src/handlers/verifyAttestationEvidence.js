@@ -30,6 +30,8 @@
  */
 
 'use strict';
+// import { createPrivateKey, createSign, } from 'node:crypto';
+// import { readFile } from 'node:fs/promises';
 
 const _ = require('lodash');
 const moment = require('moment');
@@ -45,6 +47,11 @@ const config = require('../configLoader').getConfig();
 const STATUSES = require('../koa/response').STATUSES;
 const random = require('../util/random');
 const validator = require('validator');
+
+const crypto = require('node:crypto');
+//const promises = require('node:fs/promises');
+const fs = require(`fs`);
+const path = require(`path`);
 
 const uriString = 'URI:';
 
@@ -96,6 +103,7 @@ async function verifyAttestationEvidence(ctx) {
             }
         }
     */
+
     const nonce = ctx.request.body.nonce;   // optional
     if (_.isString(nonce) && nonce.length > 32) {
         ctx.log.error('Provided nonce is longer than 32 characters: ', nonce);
@@ -228,6 +236,18 @@ async function verifyAttestationEvidence(ctx) {
         if (configuration.length > 0) {
             report.configuration = configuration;
         }
+
+        /* My function: delegation key signs report */
+        //const keystring = await promises.readFile('/QVS/delegationkey.pem', 'utf8');
+        //const privatekey = crypto.createPrivateKey(keystring);
+        const privateKey = fs.readFileSync(path.resolve('/QVS/delegationkey.pem'), "utf8");
+        const data = report.toString('base64');
+        const signer = crypto.createSign('SHA256');
+        signer.update(data);
+        const delegationSignature = signer.sign(privateKey, 'base64');
+        //console.log('delegationsignature :', delegationSignature);
+        ctx.set('Result of base64', data);
+        ctx.set('DelegationSignature', delegationSignature);
 
         await signReport(report, ctx);
 

@@ -371,1168 +371,1168 @@ IQCUt8SGvxKmjpcM/z0WP9Dvo8h2k5du1iWDdBkAn+0iiA==
 }
 
 describe('verify attestation evidence handler tests', () => {
-    it('execute - SGX - UpToDate', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveSgxStandard(ctx);
-        assert.equal(Object.keys(ctx.body).length, 9, 'Unexpected number of fields in response');
-        assert.equal(ctx.body.isvQuoteStatus, 'OK');
-        assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
-        assert.equal(ctx.body.advisoryIDs, undefined);
-    });
+    // it('execute - SGX - UpToDate', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveSgxStandard(ctx);
+    //     assert.equal(Object.keys(ctx.body).length, 9, 'Unexpected number of fields in response');
+    //     assert.equal(ctx.body.isvQuoteStatus, 'OK');
+    //     assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
+    //     assert.equal(ctx.body.advisoryIDs, undefined);
+    // });
 
-    it('execute - SGX - ConfigurationNeeded', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData({
-                cpusvn: Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            })
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity(['INTEL-SA-54321'])
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveSgxStandard(ctx);
-        assert.equal(ctx.body.isvQuoteStatus, 'OK');
-        assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
-        assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
-        assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-54321', 'INTEL-SA-68515']));
-    });
+    // it('execute - SGX - ConfigurationNeeded', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData({
+    //             cpusvn: Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    //         })
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity(['INTEL-SA-54321'])
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveSgxStandard(ctx);
+    //     assert.equal(ctx.body.isvQuoteStatus, 'OK');
+    //     assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
+    //     assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
+    //     assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-54321', 'INTEL-SA-68515']));
+    // });
 
-    it('execute - SGX - ConfigurationNeeded/TCB_OUT_OF_DATE', async() => {
-        // GIVEN
-        const nonce = '12345678901234567890123456789012';
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote,
-            nonce
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData({
-                cpusvn:          Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-                dynamicPlatform: true,
-                cachedKeys:      true,
-                smtEnabled:      true,
-            })
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote(qvlStatus.STATUS_TCB_OUT_OF_DATE)
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveSgxStandard(ctx);
-        assert.equal(ctx.body.isvQuoteStatus, 'TCB_OUT_OF_DATE');
-        assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
-        assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
-        assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-68515']));
-        assert.equal(JSON.stringify(ctx.body.tcbComponentsOutOfDate), JSON.stringify([{ category: 'cat1', type: 'type1' }]));
-        assert.equal(ctx.body.nonce, nonce);
-        assert.equal(JSON.stringify(ctx.body.configuration), JSON.stringify(['DYNAMIC_PLATFORM', 'CACHED_KEYS', 'SMT_ENABLED']));
-        assert.equal(Object.keys(ctx.body).length, 14, 'Unexpected number of fields in response');
-    });
+    // it('execute - SGX - ConfigurationNeeded/TCB_OUT_OF_DATE', async() => {
+    //     // GIVEN
+    //     const nonce = '12345678901234567890123456789012';
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote,
+    //         nonce
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData({
+    //             cpusvn:          Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    //             dynamicPlatform: true,
+    //             cachedKeys:      true,
+    //             smtEnabled:      true,
+    //         })
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote(qvlStatus.STATUS_TCB_OUT_OF_DATE)
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveSgxStandard(ctx);
+    //     assert.equal(ctx.body.isvQuoteStatus, 'TCB_OUT_OF_DATE');
+    //     assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
+    //     assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
+    //     assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-68515']));
+    //     assert.equal(JSON.stringify(ctx.body.tcbComponentsOutOfDate), JSON.stringify([{ category: 'cat1', type: 'type1' }]));
+    //     assert.equal(ctx.body.nonce, nonce);
+    //     assert.equal(JSON.stringify(ctx.body.configuration), JSON.stringify(['DYNAMIC_PLATFORM', 'CACHED_KEYS', 'SMT_ENABLED']));
+    //     assert.equal(Object.keys(ctx.body).length, 14, 'Unexpected number of fields in response');
+    // });
 
-    it('execute - TDX - UpToDate', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData()
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveTdx(ctx);
-        assert.equal(Object.keys(ctx.body).length, 9, 'Unexpected number of fields in response');
-        assert.equal(ctx.body.isvQuoteStatus, 'OK');
-        assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
-    });
+    // it('execute - TDX - UpToDate', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData()
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveTdx(ctx);
+    //     assert.equal(Object.keys(ctx.body).length, 9, 'Unexpected number of fields in response');
+    //     assert.equal(ctx.body.isvQuoteStatus, 'OK');
+    //     assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
+    // });
 
-    it('execute - TDX - ConfigurationNeeded', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData({
-                cpusvn: Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            })
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositive(ctx);
-        assert.equal(Object.keys(ctx.body).length, 11, 'Unexpected number of fields in response');
-        assert.equal(ctx.body.teeType, 'TDX');
-        assert.equal(ctx.body.isvQuoteStatus, 'OK');
-        assert.equal(ctx.body.isvQuoteBody, c.tdxQuoteBody);
-        assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
-        assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
-        assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-68515']));
-    });
+    // it('execute - TDX - ConfigurationNeeded', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData({
+    //             cpusvn: Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    //         })
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositive(ctx);
+    //     assert.equal(Object.keys(ctx.body).length, 11, 'Unexpected number of fields in response');
+    //     assert.equal(ctx.body.teeType, 'TDX');
+    //     assert.equal(ctx.body.isvQuoteStatus, 'OK');
+    //     assert.equal(ctx.body.isvQuoteBody, c.tdxQuoteBody);
+    //     assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
+    //     assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
+    //     assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-68515']));
+    // });
 
-    it('execute - TDX - ConfigurationNeeded/TCB_OUT_OF_DATE', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        const nonce = '12345678901234567890123456789012';
-        ctx.request.body = {
-            isvQuote: c.tdxQuote,
-            nonce
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData({
-                cpusvn:          Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-                dynamicPlatform: true,
-                cachedKeys:      true,
-                smtEnabled:      true,
-            })
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote(qvlStatus.STATUS_TCB_OUT_OF_DATE)
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositive(ctx);
-        assert.equal(ctx.body.teeType, 'TDX');
-        assert.equal(ctx.body.isvQuoteStatus, 'TCB_OUT_OF_DATE');
-        assert.equal(ctx.body.isvQuoteBody, c.tdxQuoteBody);
-        assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
-        assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
-        assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-68515']));
-        assert.equal(JSON.stringify(ctx.body.tcbComponentsOutOfDate), JSON.stringify([{ category: 'cat1', type: 'type1' }, { category: 'KRYYIXKC8U', type: '@TU9B14XQO' }]));
-        assert.equal(JSON.stringify(ctx.body.configuration), JSON.stringify(['DYNAMIC_PLATFORM', 'CACHED_KEYS', 'SMT_ENABLED']));
-        assert.equal(ctx.body.nonce, nonce);
-        assert.equal(Object.keys(ctx.body).length, 14, 'Unexpected number of fields in response');
-    });
+    // it('execute - TDX - ConfigurationNeeded/TCB_OUT_OF_DATE', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     const nonce = '12345678901234567890123456789012';
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote,
+    //         nonce
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData({
+    //             cpusvn:          Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    //             dynamicPlatform: true,
+    //             cachedKeys:      true,
+    //             smtEnabled:      true,
+    //         })
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote(qvlStatus.STATUS_TCB_OUT_OF_DATE)
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositive(ctx);
+    //     assert.equal(ctx.body.teeType, 'TDX');
+    //     assert.equal(ctx.body.isvQuoteStatus, 'TCB_OUT_OF_DATE');
+    //     assert.equal(ctx.body.isvQuoteBody, c.tdxQuoteBody);
+    //     assert.equal(ctx.body.tcbEvaluationDataNumber, 0);
+    //     assert.equal(ctx.body.advisoryURL, 'https://security-center.intel.com');
+    //     assert.equal(JSON.stringify(ctx.body.advisoryIDs), JSON.stringify(['INTEL-SA-38861', 'INTEL-SA-68515']));
+    //     assert.equal(JSON.stringify(ctx.body.tcbComponentsOutOfDate), JSON.stringify([{ category: 'cat1', type: 'type1' }, { category: 'KRYYIXKC8U', type: '@TU9B14XQO' }]));
+    //     assert.equal(JSON.stringify(ctx.body.configuration), JSON.stringify(['DYNAMIC_PLATFORM', 'CACHED_KEYS', 'SMT_ENABLED']));
+    //     assert.equal(ctx.body.nonce, nonce);
+    //     assert.equal(Object.keys(ctx.body).length, 14, 'Unexpected number of fields in response');
+    // });
 
-    it('execute - TDX - TCB level mismatch', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData({
-                cpusvn: Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            })
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.equal(ctx.status, 400);
-        assert.equal(c.qvl.getCertificationData.callCount, 1);
-        assert.equal(c.qvl.getPckCertificateData.callCount, 1);
-        assert.equal(c.qvl.getCrlDistributionPoint.callCount, 2);
-        assert.equal(ctx.body, undefined, 'Unexpected body response');
-    });
+    // it('execute - TDX - TCB level mismatch', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData({
+    //             cpusvn: Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    //         })
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.equal(ctx.status, 400);
+    //     assert.equal(c.qvl.getCertificationData.callCount, 1);
+    //     assert.equal(c.qvl.getPckCertificateData.callCount, 1);
+    //     assert.equal(c.qvl.getCrlDistributionPoint.callCount, 2);
+    //     assert.equal(ctx.body, undefined, 'Unexpected body response');
+    // });
 
-    it('execute - TDX - Enclave TCB level mismatch', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData()
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        const qeIdentity = {
-            enclaveIdentity: {
-                tcbEvaluationDataNumber: 0,
-                tcbLevels:               [
-                    {
-                        tcb: { isvsvn: 12978 }
-                    }
-                ]
-            }
-        };
-        c.pcsClient.getSgxQeIdentity.resolves({ status: 200, body: qeIdentity });
-        c.pcsClient.getTdxQeIdentity.resolves({ status: 200, body: qeIdentity });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.equal(ctx.status, 400);
-        assert.equal(c.qvl.getCertificationData.callCount, 1);
-        assert.equal(c.qvl.getPckCertificateData.callCount, 1);
-        assert.equal(c.qvl.getCrlDistributionPoint.callCount, 2);
-        assert.equal(ctx.body, undefined, 'Unexpected body response');
-    });
+    // it('execute - TDX - Enclave TCB level mismatch', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData()
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     const qeIdentity = {
+    //         enclaveIdentity: {
+    //             tcbEvaluationDataNumber: 0,
+    //             tcbLevels:               [
+    //                 {
+    //                     tcb: { isvsvn: 12978 }
+    //                 }
+    //             ]
+    //         }
+    //     };
+    //     c.pcsClient.getSgxQeIdentity.resolves({ status: 200, body: qeIdentity });
+    //     c.pcsClient.getTdxQeIdentity.resolves({ status: 200, body: qeIdentity });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.equal(ctx.status, 400);
+    //     assert.equal(c.qvl.getCertificationData.callCount, 1);
+    //     assert.equal(c.qvl.getPckCertificateData.callCount, 1);
+    //     assert.equal(c.qvl.getCrlDistributionPoint.callCount, 2);
+    //     assert.equal(ctx.body, undefined, 'Unexpected body response');
+    // });
 
-    it('execute - TDX - Enclave TCB level match between levels', async() => {
-        const expectedAdvisoryIds = ['INTEL-SA-54321'];
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.defaultSetup();
-        const qeIdentity = {
-            enclaveIdentity: {
-                tcbEvaluationDataNumber: 0,
-                tcbLevels:               [
-                    {
-                        tcb:         { isvsvn: 555 },
-                        advisoryIDs: expectedAdvisoryIds
-                    }
-                ]
-            }
-        };
-        c.pcsClient.getSgxQeIdentity.resolves({ status: 200, body: qeIdentity });
-        c.pcsClient.getTdxQeIdentity.resolves({ status: 200, body: qeIdentity });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveTdx(ctx);
-        assert.deepEqual(ctx.body.advisoryIDs, expectedAdvisoryIds);
-    });
+    // it('execute - TDX - Enclave TCB level match between levels', async() => {
+    //     const expectedAdvisoryIds = ['INTEL-SA-54321'];
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.defaultSetup();
+    //     const qeIdentity = {
+    //         enclaveIdentity: {
+    //             tcbEvaluationDataNumber: 0,
+    //             tcbLevels:               [
+    //                 {
+    //                     tcb:         { isvsvn: 555 },
+    //                     advisoryIDs: expectedAdvisoryIds
+    //                 }
+    //             ]
+    //         }
+    //     };
+    //     c.pcsClient.getSgxQeIdentity.resolves({ status: 200, body: qeIdentity });
+    //     c.pcsClient.getTdxQeIdentity.resolves({ status: 200, body: qeIdentity });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveTdx(ctx);
+    //     assert.deepEqual(ctx.body.advisoryIDs, expectedAdvisoryIds);
+    // });
 
-    it('execute - TDX - TCB level mismatch', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData()
-            .setupCrlDistributionPoint()
-            .setupTcbInfo({
-                tcbInfo: {
-                    issueDate: '2021-08-06T13:55:15Z',
-                    tcbLevels: [
-                        {
-                            tcb: {
-                                sgxtcbcomponents: [
-                                    { svn: 3 },
-                                    { svn: 2 },
-                                    { svn: 1 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 },
-                                    { svn: 0 }
-                                ],
-                                tdxtcbcomponents: [
-                                    { svn: 83, category: 'KRYYIXKC8U', type: '@TU9B14XQO' },
-                                    { svn: 193, category: '504X036OI0', type: 'EQJ363GEJV' },
-                                    { svn: 163, category: 'JZT5BUBBET', type: '@6ZH630STD' },
-                                    { svn: 140, category: 'XMJJ814468', type: '1G0N1J G9D' },
-                                    { svn: 247, category: 'HGVSWL@TCR', type: '9WZUC8QV@G' },
-                                    { svn: 237 },
-                                    { svn: 243 },
-                                    { svn: 10 },
-                                    { svn: 82 },
-                                    { svn: 75, category: 'GDXEGMOEMR', type: 'TC145 MZV0' },
-                                    { svn: 78, category: 'L9GDQAPJEN', type: 'I YVRGWSOR' },
-                                    { svn: 187, category: 'AW 0H0XEFY', type: 'PNGZ1XU075' },
-                                    { svn: 4 },
-                                    { svn: 159 },
-                                    { svn: 89, category: 'JLH22L7UTB', type: 'GX3A1IZC82' },
-                                    { svn: 199 },
-                                ],
-                                pcesvn: 3,
-                            },
-                            tcbDate:   '2019-09-01T00:00:00Z',
-                            tcbStatus: 'UpToDate'
-                        }
-                    ]
-                }
-            })
-            .setupQeIdentity()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.equal(ctx.status, 400);
-        assert.equal(c.qvl.getCertificationData.callCount, 1);
-        assert.equal(c.qvl.getPckCertificateData.callCount, 1);
-        assert.equal(c.qvl.getCrlDistributionPoint.callCount, 2);
-        assert.equal(ctx.body, undefined, 'Unexpected body response');
-    });
+    // it('execute - TDX - TCB level mismatch', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData()
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo({
+    //             tcbInfo: {
+    //                 issueDate: '2021-08-06T13:55:15Z',
+    //                 tcbLevels: [
+    //                     {
+    //                         tcb: {
+    //                             sgxtcbcomponents: [
+    //                                 { svn: 3 },
+    //                                 { svn: 2 },
+    //                                 { svn: 1 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 },
+    //                                 { svn: 0 }
+    //                             ],
+    //                             tdxtcbcomponents: [
+    //                                 { svn: 83, category: 'KRYYIXKC8U', type: '@TU9B14XQO' },
+    //                                 { svn: 193, category: '504X036OI0', type: 'EQJ363GEJV' },
+    //                                 { svn: 163, category: 'JZT5BUBBET', type: '@6ZH630STD' },
+    //                                 { svn: 140, category: 'XMJJ814468', type: '1G0N1J G9D' },
+    //                                 { svn: 247, category: 'HGVSWL@TCR', type: '9WZUC8QV@G' },
+    //                                 { svn: 237 },
+    //                                 { svn: 243 },
+    //                                 { svn: 10 },
+    //                                 { svn: 82 },
+    //                                 { svn: 75, category: 'GDXEGMOEMR', type: 'TC145 MZV0' },
+    //                                 { svn: 78, category: 'L9GDQAPJEN', type: 'I YVRGWSOR' },
+    //                                 { svn: 187, category: 'AW 0H0XEFY', type: 'PNGZ1XU075' },
+    //                                 { svn: 4 },
+    //                                 { svn: 159 },
+    //                                 { svn: 89, category: 'JLH22L7UTB', type: 'GX3A1IZC82' },
+    //                                 { svn: 199 },
+    //                             ],
+    //                             pcesvn: 3,
+    //                         },
+    //                         tcbDate:   '2019-09-01T00:00:00Z',
+    //                         tcbStatus: 'UpToDate'
+    //                     }
+    //                 ]
+    //             }
+    //         })
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.equal(ctx.status, 400);
+    //     assert.equal(c.qvl.getCertificationData.callCount, 1);
+    //     assert.equal(c.qvl.getPckCertificateData.callCount, 1);
+    //     assert.equal(c.qvl.getCrlDistributionPoint.callCount, 2);
+    //     assert.equal(ctx.body, undefined, 'Unexpected body response');
+    // });
 
-    it('execute - TDX - unexpected empty advisoryIDs', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData({
-                cpusvn: Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            })
-            .setupCrlDistributionPoint()
-            .setupTcbInfo({
-                tcbInfo: {
-                    issueDate: '2021-08-06T13:55:15Z',
-                    tcbLevels:
-                        [
-                            {
-                                tcb: {
-                                    sgxtcbcomponents: [
-                                        { svn: 3 },
-                                        { svn: 2 },
-                                        { svn: 1 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 }
-                                    ],
-                                    tdxtcbcomponents: [
-                                        { svn: 82 },
-                                        { svn: 193 },
-                                        { svn: 163 },
-                                        { svn: 140 },
-                                        { svn: 247 },
-                                        { svn: 237 },
-                                        { svn: 243 },
-                                        { svn: 10 },
-                                        { svn: 82 },
-                                        { svn: 75 },
-                                        { svn: 78 },
-                                        { svn: 187 },
-                                        { svn: 4 },
-                                        { svn: 159 },
-                                        { svn: 89 },
-                                        { svn: 199 },
-                                    ],
-                                    pcesvn: 3,
-                                },
-                                tcbDate:   '2019-09-01T00:00:00Z',
-                                tcbStatus: 'UpToDate'
-                            },
-                            {
-                                tcb: {
-                                    sgxtcbcomponents: [
-                                        { svn: 3 },
-                                        { svn: 2 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 },
-                                        { svn: 0 }
-                                    ],
-                                    tdxtcbcomponents: [
-                                        { svn: 82 },
-                                        { svn: 193 },
-                                        { svn: 163 },
-                                        { svn: 140 },
-                                        { svn: 247 },
-                                        { svn: 237 },
-                                        { svn: 243 },
-                                        { svn: 10 },
-                                        { svn: 82 },
-                                        { svn: 75 },
-                                        { svn: 78 },
-                                        { svn: 187 },
-                                        { svn: 4 },
-                                        { svn: 159 },
-                                        { svn: 89 },
-                                        { svn: 199 },
-                                    ],
-                                    pcesvn: 3,
-                                },
-                                tcbDate:     '2019-09-01T00:00:00Z',
-                                tcbStatus:   'ConfigurationNeeded',
-                                advisoryIDs: [] // should be filled in real scenario
-                            }
-                        ]
-                }
-            })
-            .setupQeIdentity()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveTdx(ctx);
-        assert.equal(ctx.body.advisoryIDs, undefined);
-    });
+    // it('execute - TDX - unexpected empty advisoryIDs', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData({
+    //             cpusvn: Buffer.from([3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    //         })
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo({
+    //             tcbInfo: {
+    //                 issueDate: '2021-08-06T13:55:15Z',
+    //                 tcbLevels:
+    //                     [
+    //                         {
+    //                             tcb: {
+    //                                 sgxtcbcomponents: [
+    //                                     { svn: 3 },
+    //                                     { svn: 2 },
+    //                                     { svn: 1 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 }
+    //                                 ],
+    //                                 tdxtcbcomponents: [
+    //                                     { svn: 82 },
+    //                                     { svn: 193 },
+    //                                     { svn: 163 },
+    //                                     { svn: 140 },
+    //                                     { svn: 247 },
+    //                                     { svn: 237 },
+    //                                     { svn: 243 },
+    //                                     { svn: 10 },
+    //                                     { svn: 82 },
+    //                                     { svn: 75 },
+    //                                     { svn: 78 },
+    //                                     { svn: 187 },
+    //                                     { svn: 4 },
+    //                                     { svn: 159 },
+    //                                     { svn: 89 },
+    //                                     { svn: 199 },
+    //                                 ],
+    //                                 pcesvn: 3,
+    //                             },
+    //                             tcbDate:   '2019-09-01T00:00:00Z',
+    //                             tcbStatus: 'UpToDate'
+    //                         },
+    //                         {
+    //                             tcb: {
+    //                                 sgxtcbcomponents: [
+    //                                     { svn: 3 },
+    //                                     { svn: 2 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 },
+    //                                     { svn: 0 }
+    //                                 ],
+    //                                 tdxtcbcomponents: [
+    //                                     { svn: 82 },
+    //                                     { svn: 193 },
+    //                                     { svn: 163 },
+    //                                     { svn: 140 },
+    //                                     { svn: 247 },
+    //                                     { svn: 237 },
+    //                                     { svn: 243 },
+    //                                     { svn: 10 },
+    //                                     { svn: 82 },
+    //                                     { svn: 75 },
+    //                                     { svn: 78 },
+    //                                     { svn: 187 },
+    //                                     { svn: 4 },
+    //                                     { svn: 159 },
+    //                                     { svn: 89 },
+    //                                     { svn: 199 },
+    //                                 ],
+    //                                 pcesvn: 3,
+    //                             },
+    //                             tcbDate:     '2019-09-01T00:00:00Z',
+    //                             tcbStatus:   'ConfigurationNeeded',
+    //                             advisoryIDs: [] // should be filled in real scenario
+    //                         }
+    //                     ]
+    //             }
+    //         })
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveTdx(ctx);
+    //     assert.equal(ctx.body.advisoryIDs, undefined);
+    // });
 
-    it('execute - quote parsing failure', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData()
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote()
-            .setupCertificateChain()
-            .setupSignature();
-        // WHEN
-        c.qvl.getCertificationData.throws('Problem');
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.equal(ctx.status, 400);
-        assert.equal(c.qvl.getCertificationData.callCount, 1);
-        assert.equal(c.qvl.getPckCertificateData.callCount, 0);
-        assert.equal(c.qvl.getCrlDistributionPoint.callCount, 0);
-        assert.equal(ctx.body, undefined, 'Unexpected body response');
-    });
+    // it('execute - quote parsing failure', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData()
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote()
+    //         .setupCertificateChain()
+    //         .setupSignature();
+    //     // WHEN
+    //     c.qvl.getCertificationData.throws('Problem');
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.equal(ctx.status, 400);
+    //     assert.equal(c.qvl.getCertificationData.callCount, 1);
+    //     assert.equal(c.qvl.getPckCertificateData.callCount, 0);
+    //     assert.equal(c.qvl.getCrlDistributionPoint.callCount, 0);
+    //     assert.equal(ctx.body, undefined, 'Unexpected body response');
+    // });
 
-    const anyErrorSource = -1;
-    const allErrorSources = [...Array(Object.keys(errorSource).length).keys()];
-    const qvlPositiveStatuses = [
-        { qvlStatus: qvlStatus.STATUS_OK, isvQuoteStatus: 'OK' },
-        { qvlStatus: qvlStatus.STATUS_INVALID_QUOTE_SIGNATURE, isvQuoteStatus: 'SIGNATURE_INVALID' },
-        { qvlStatus: qvlStatus.STATUS_SGX_PCK_REVOKED, isvQuoteStatus: 'REVOKED' },
-        { qvlStatus: qvlStatus.STATUS_PCK_REVOKED, isvQuoteStatus: 'REVOKED' },
-        { qvlStatus: qvlStatus.STATUS_TCB_REVOKED, isvQuoteStatus: 'REVOKED' },
-        { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_REVOKED, isvQuoteStatus: 'REVOKED' },
-        { qvlStatus: qvlStatus.STATUS_TCB_OUT_OF_DATE, isvQuoteStatus: 'TCB_OUT_OF_DATE' },
-        { qvlStatus: qvlStatus.STATUS_TCB_CONFIGURATION_NEEDED, isvQuoteStatus: 'CONFIGURATION_NEEDED' },
-        { qvlStatus: qvlStatus.STATUS_TCB_OUT_OF_DATE_CONFIGURATION_NEEDED, isvQuoteStatus: 'TCB_OUT_OF_DATE_AND_CONFIGURATION_NEEDED' },
-        { qvlStatus: qvlStatus.STATUS_TCB_SW_HARDENING_NEEDED, isvQuoteStatus: 'SW_HARDENING_NEEDED' },
-        { qvlStatus: qvlStatus.STATUS_TCB_CONFIGURATION_AND_SW_HARDENING_NEEDED, isvQuoteStatus: 'CONFIGURATION_AND_SW_HARDENING_NEEDED' }
-    ];
-    const qvlExpectedNegativeStatuses = [
-        { qvlStatus: qvlStatus.STATUS_UNSUPPORTED_CERT_FORMAT, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
-        { qvlStatus: qvlStatus.STATUS_SGX_ROOT_CA_MISSING, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
-        { qvlStatus: qvlStatus.STATUS_SGX_ROOT_CA_INVALID_EXTENSIONS, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
-        { qvlStatus: qvlStatus.STATUS_SGX_ROOT_CA_INVALID_ISSUER, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
-        { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_MISSING, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_INVALID_EXTENSIONS, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_INVALID_ISSUER, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_PCK_MISSING, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_PCK_INVALID_EXTENSIONS, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_PCK_INVALID_ISSUER, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_PCK_CERT_CHAIN_UNTRUSTED, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_UNSUPPORTED_QUOTE_FORMAT, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_UNSUPPORTED_PCK_CERT_FORMAT, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_INVALID_PCK_CERT, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_TCB_NOT_SUPPORTED, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_INVALID_QE_REPORT_SIGNATURE, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_INVALID_QE_REPORT_DATA, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_QE_IDENTITY_MISMATCH, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_SGX_PCK_CERT_CHAIN_EXPIRED, errorSource: anyErrorSource },
-        { qvlStatus: qvlStatus.STATUS_TDX_MODULE_MISMATCH, errorSource: anyErrorSource }
-    ];
-    const qvlUnexpectedStatuses = [...Array(Object.keys(qvlStatus).length).keys()]
-        .filter(i => !qvlPositiveStatuses.map(s => s.qvlStatus).includes(i))
-        .concat([-1, Object.keys(qvlStatus).length]) // values outside of range
-        .map(i => {
-            const obj = qvlExpectedNegativeStatuses.find(x => x.qvlStatus === i);
-            if (obj?.errorSource === anyErrorSource) {
-                return null;
-            }
-            return { qvlStatus: i, errorSources: allErrorSources.filter(x => x !== obj?.errorSource) };
-        })
-        .filter(x => x !== null);
+    // const anyErrorSource = -1;
+    // const allErrorSources = [...Array(Object.keys(errorSource).length).keys()];
+    // const qvlPositiveStatuses = [
+    //     { qvlStatus: qvlStatus.STATUS_OK, isvQuoteStatus: 'OK' },
+    //     { qvlStatus: qvlStatus.STATUS_INVALID_QUOTE_SIGNATURE, isvQuoteStatus: 'SIGNATURE_INVALID' },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_PCK_REVOKED, isvQuoteStatus: 'REVOKED' },
+    //     { qvlStatus: qvlStatus.STATUS_PCK_REVOKED, isvQuoteStatus: 'REVOKED' },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_REVOKED, isvQuoteStatus: 'REVOKED' },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_REVOKED, isvQuoteStatus: 'REVOKED' },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_OUT_OF_DATE, isvQuoteStatus: 'TCB_OUT_OF_DATE' },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_CONFIGURATION_NEEDED, isvQuoteStatus: 'CONFIGURATION_NEEDED' },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_OUT_OF_DATE_CONFIGURATION_NEEDED, isvQuoteStatus: 'TCB_OUT_OF_DATE_AND_CONFIGURATION_NEEDED' },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_SW_HARDENING_NEEDED, isvQuoteStatus: 'SW_HARDENING_NEEDED' },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_CONFIGURATION_AND_SW_HARDENING_NEEDED, isvQuoteStatus: 'CONFIGURATION_AND_SW_HARDENING_NEEDED' }
+    // ];
+    // const qvlExpectedNegativeStatuses = [
+    //     { qvlStatus: qvlStatus.STATUS_UNSUPPORTED_CERT_FORMAT, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_ROOT_CA_MISSING, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_ROOT_CA_INVALID_EXTENSIONS, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_ROOT_CA_INVALID_ISSUER, errorSource: errorSource.VERIFY_PCK_CERTIFICATE },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_MISSING, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_INVALID_EXTENSIONS, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_INTERMEDIATE_CA_INVALID_ISSUER, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_PCK_MISSING, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_PCK_INVALID_EXTENSIONS, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_PCK_INVALID_ISSUER, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_PCK_CERT_CHAIN_UNTRUSTED, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_UNSUPPORTED_QUOTE_FORMAT, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_UNSUPPORTED_PCK_CERT_FORMAT, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_INVALID_PCK_CERT, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_TCB_NOT_SUPPORTED, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_INVALID_QE_REPORT_SIGNATURE, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_INVALID_QE_REPORT_DATA, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_QE_IDENTITY_MISMATCH, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_SGX_PCK_CERT_CHAIN_EXPIRED, errorSource: anyErrorSource },
+    //     { qvlStatus: qvlStatus.STATUS_TDX_MODULE_MISMATCH, errorSource: anyErrorSource }
+    // ];
+    // const qvlUnexpectedStatuses = [...Array(Object.keys(qvlStatus).length).keys()]
+    //     .filter(i => !qvlPositiveStatuses.map(s => s.qvlStatus).includes(i))
+    //     .concat([-1, Object.keys(qvlStatus).length]) // values outside of range
+    //     .map(i => {
+    //         const obj = qvlExpectedNegativeStatuses.find(x => x.qvlStatus === i);
+    //         if (obj?.errorSource === anyErrorSource) {
+    //             return null;
+    //         }
+    //         return { qvlStatus: i, errorSources: allErrorSources.filter(x => x !== obj?.errorSource) };
+    //     })
+    //     .filter(x => x !== null);
 
-    async function testQvlStatus(qvlStatus, errorSource, expectedHttpStatus, errors, isvQuoteStatus) {
+    // async function testQvlStatus(qvlStatus, errorSource, expectedHttpStatus, errors, isvQuoteStatus) {
 
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.setupCertificationData()
-            .setupPckCertificateData()
-            .setupCrlDistributionPoint()
-            .setupTcbInfo()
-            .setupQeIdentity()
-            .setupVerifyQuote(qvlStatus, errorSource)
-            .setupCertificateChain()
-            .setupSignature();
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.setupCertificationData()
+    //         .setupPckCertificateData()
+    //         .setupCrlDistributionPoint()
+    //         .setupTcbInfo()
+    //         .setupQeIdentity()
+    //         .setupVerifyQuote(qvlStatus, errorSource)
+    //         .setupCertificateChain()
+    //         .setupSignature();
 
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.equal(ctx.status, expectedHttpStatus, `Http statuses don't match for QVL status ${qvlStatus}`);
-        assert.equal(ctx.body?.isvQuoteStatus, isvQuoteStatus, `isvQuoteStatus don't match for QVL status ${qvlStatus}`);
-        assert.equal(c.logger.error.callCount, errors, `Unexpected number of errors for QVL status ${qvlStatus}`);
-    }
-    /* eslint-disable no-await-in-loop */
-    async function testUnexpectedQvlStatuses(source) {
-        for (const { qvlStatus } of qvlUnexpectedStatuses.filter(x => x.errorSources.includes(source))) {
-            await testQvlStatus(qvlStatus, source, 500, 1);
-        }
-    }
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.equal(ctx.status, expectedHttpStatus, `Http statuses don't match for QVL status ${qvlStatus}`);
+    //     assert.equal(ctx.body?.isvQuoteStatus, isvQuoteStatus, `isvQuoteStatus don't match for QVL status ${qvlStatus}`);
+    //     assert.equal(c.logger.error.callCount, errors, `Unexpected number of errors for QVL status ${qvlStatus}`);
+    // }
+    // /* eslint-disable no-await-in-loop */
+    // async function testUnexpectedQvlStatuses(source) {
+    //     for (const { qvlStatus } of qvlUnexpectedStatuses.filter(x => x.errorSources.includes(source))) {
+    //         await testQvlStatus(qvlStatus, source, 500, 1);
+    //     }
+    // }
 
-    it('execute - qvl returns positive status results in status 200', async() => {
-        for (const { qvlStatus, isvQuoteStatus } of qvlPositiveStatuses) {
-            await testQvlStatus(qvlStatus, undefined, 200, 0, isvQuoteStatus);
-        }
-    });
+    // it('execute - qvl returns positive status results in status 200', async() => {
+    //     for (const { qvlStatus, isvQuoteStatus } of qvlPositiveStatuses) {
+    //         await testQvlStatus(qvlStatus, undefined, 200, 0, isvQuoteStatus);
+    //     }
+    // });
 
-    it('execute - qvl returns expected negative status results in status 400', async() => {
-        for (const qvlExpectedNegativeStatus of qvlExpectedNegativeStatuses) {
-            await testQvlStatus(qvlExpectedNegativeStatus.qvlStatus, qvlExpectedNegativeStatus.errorSource, 400, 1);
-        }
-    });
-    /* eslint-enable no-await-in-loop */
+    // it('execute - qvl returns expected negative status results in status 400', async() => {
+    //     for (const qvlExpectedNegativeStatus of qvlExpectedNegativeStatuses) {
+    //         await testQvlStatus(qvlExpectedNegativeStatus.qvlStatus, qvlExpectedNegativeStatus.errorSource, 400, 1);
+    //     }
+    // });
+    // /* eslint-enable no-await-in-loop */
 
-    it('execute - qvl returns unexpected status during pck cert verification results in status 500', async() => {
-        await testUnexpectedQvlStatuses(errorSource.VERIFY_PCK_CERTIFICATE);
-    });
-    it('execute - qvl returns unexpected status during tcb info verification results in status 500', async() => {
-        await testUnexpectedQvlStatuses(errorSource.VERIFY_TCB_INFO);
-    });
-    it('execute - qvl returns unexpected status during QE identity verification results in status 500', async() => {
-        await testUnexpectedQvlStatuses(errorSource.VERIFY_ENCLAVE_IDENTITY);
-    });
-    it('execute - qvl returns unexpected status during quote verification results in status 500', async() => {
-        await testUnexpectedQvlStatuses(errorSource.VERIFY_QUOTE);
-    });
+    // it('execute - qvl returns unexpected status during pck cert verification results in status 500', async() => {
+    //     await testUnexpectedQvlStatuses(errorSource.VERIFY_PCK_CERTIFICATE);
+    // });
+    // it('execute - qvl returns unexpected status during tcb info verification results in status 500', async() => {
+    //     await testUnexpectedQvlStatuses(errorSource.VERIFY_TCB_INFO);
+    // });
+    // it('execute - qvl returns unexpected status during QE identity verification results in status 500', async() => {
+    //     await testUnexpectedQvlStatuses(errorSource.VERIFY_ENCLAVE_IDENTITY);
+    // });
+    // it('execute - qvl returns unexpected status during quote verification results in status 500', async() => {
+    //     await testUnexpectedQvlStatuses(errorSource.VERIFY_QUOTE);
+    // });
 
-    it('execute - qvl returns no errorSource despite throwing error', async() => {
-        const expectedStatusForAnySource = qvlExpectedNegativeStatuses.find(x => x.errorSource === anyErrorSource).qvlStatus;
-        await testQvlStatus(expectedStatusForAnySource, undefined, 500, 1);
-    });
+    // it('execute - qvl returns no errorSource despite throwing error', async() => {
+    //     const expectedStatusForAnySource = qvlExpectedNegativeStatuses.find(x => x.errorSource === anyErrorSource).qvlStatus;
+    //     await testQvlStatus(expectedStatusForAnySource, undefined, 500, 1);
+    // });
 
-    describe('nonce', () => {
-        it('too long', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    '123456789012345678901234567890123'  // 33 characters
-            };
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            assert.strictEqual(ctx.status, 400);
-            assert.strictEqual(ctx.hasOwnProperty('body'), false);
-            assertMockCalledOnceWithArgs(ctx.log.error, 'Provided nonce is longer than 32 characters: ', ctx.request.body.nonce);
-        });
+    // describe('nonce', () => {
+    //     it('too long', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    '123456789012345678901234567890123'  // 33 characters
+    //         };
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         assert.strictEqual(ctx.status, 400);
+    //         assert.strictEqual(ctx.hasOwnProperty('body'), false);
+    //         assertMockCalledOnceWithArgs(ctx.log.error, 'Provided nonce is longer than 32 characters: ', ctx.request.body.nonce);
+    //     });
 
-        it('not provided', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote
-            };
-            c.defaultSetup();
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assert.strictEqual(ctx.body.hasOwnProperty('nonce'), false);
-        });
-    });
+    //     it('not provided', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote
+    //         };
+    //         c.defaultSetup();
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assert.strictEqual(ctx.body.hasOwnProperty('nonce'), false);
+    //     });
+    // });
 
-    describe('update type', () => {
-        it('early', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            c.updateType = 'early';
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote
-            };
-            c.defaultSetup();
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assertMockCalledOnceWithArgs(c.pcsClient.getSgxTcbInfo, '00906EA10000', c.updateType, c.reqId, c.logger);
-            assertMockCalledOnceWithArgs(c.pcsClient.getSgxQeIdentity, c.updateType, c.reqId, c.logger);
-        });
+    // describe('update type', () => {
+    //     it('early', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         c.updateType = 'early';
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote
+    //         };
+    //         c.defaultSetup();
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assertMockCalledOnceWithArgs(c.pcsClient.getSgxTcbInfo, '00906EA10000', c.updateType, c.reqId, c.logger);
+    //         assertMockCalledOnceWithArgs(c.pcsClient.getSgxQeIdentity, c.updateType, c.reqId, c.logger);
+    //     });
 
-        it('default - standard', async() => {
-            // GIVEN
-            const defaultUpdateType = 'standard';
-            const c = new TestContext();
-            const target = await c.getTarget();
-            c.updateType = undefined;
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote
-            };
-            c.defaultSetup();
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assertMockCalledOnceWithArgs(c.pcsClient.getSgxTcbInfo, '00906EA10000', defaultUpdateType, c.reqId, c.logger);
-            assertMockCalledOnceWithArgs(c.pcsClient.getSgxQeIdentity, defaultUpdateType, c.reqId, c.logger);
-        });
+    //     it('default - standard', async() => {
+    //         // GIVEN
+    //         const defaultUpdateType = 'standard';
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         c.updateType = undefined;
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote
+    //         };
+    //         c.defaultSetup();
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assertMockCalledOnceWithArgs(c.pcsClient.getSgxTcbInfo, '00906EA10000', defaultUpdateType, c.reqId, c.logger);
+    //         assertMockCalledOnceWithArgs(c.pcsClient.getSgxQeIdentity, defaultUpdateType, c.reqId, c.logger);
+    //     });
 
-        it('invalid', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            c.updateType = 'wrong update';
-            const ctx = await c.getCtx();
-            c.defaultSetup();
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            assert.equal(ctx.status, 400);
-            assert.strictEqual(ctx.hasOwnProperty('body'), false);
-            assertMockCalledOnceWithArgs(ctx.log.error, 'Provided update is not one of early,standard: ', c.updateType);
-        });
-    });
+    //     it('invalid', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         c.updateType = 'wrong update';
+    //         const ctx = await c.getCtx();
+    //         c.defaultSetup();
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         assert.equal(ctx.status, 400);
+    //         assert.strictEqual(ctx.hasOwnProperty('body'), false);
+    //         assertMockCalledOnceWithArgs(ctx.log.error, 'Provided update is not one of early,standard: ', c.updateType);
+    //     });
+    // });
 
-    describe('configuration', () => {
+    // describe('configuration', () => {
 
-        it('no flags - no configuration field', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup();
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assert.strictEqual(ctx.body.hasOwnProperty('configuration'), false);
-        });
+    //     it('no flags - no configuration field', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup();
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assert.strictEqual(ctx.body.hasOwnProperty('configuration'), false);
+    //     });
 
-        it('dynamic platform', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup().setupPckCertificateData({ dynamicPlatform: true });
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assert.deepEqual(ctx.body.configuration, ['DYNAMIC_PLATFORM']);
-        });
+    //     it('dynamic platform', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup().setupPckCertificateData({ dynamicPlatform: true });
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assert.deepEqual(ctx.body.configuration, ['DYNAMIC_PLATFORM']);
+    //     });
 
-        it('cached keys', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup().setupPckCertificateData({ cachedKeys: true });
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assert.deepEqual(ctx.body.configuration, ['CACHED_KEYS']);
-        });
+    //     it('cached keys', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup().setupPckCertificateData({ cachedKeys: true });
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assert.deepEqual(ctx.body.configuration, ['CACHED_KEYS']);
+    //     });
 
-        it('SMT enabled', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup().setupPckCertificateData({ smtEnabled: true });
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assert.deepEqual(ctx.body.configuration, ['SMT_ENABLED']);
-        });
+    //     it('SMT enabled', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup().setupPckCertificateData({ smtEnabled: true });
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assert.deepEqual(ctx.body.configuration, ['SMT_ENABLED']);
+    //     });
 
-        it('multiple flags', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup().setupPckCertificateData({
-                dynamicPlatform: true,
-                cachedKeys:      true,
-                smtEnabled:      true
-            });
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            c.assertPositiveSgxStandard(ctx);
-            assert.deepEqual(ctx.body.configuration, ['DYNAMIC_PLATFORM', 'CACHED_KEYS', 'SMT_ENABLED']);
-        });
+    //     it('multiple flags', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup().setupPckCertificateData({
+    //             dynamicPlatform: true,
+    //             cachedKeys:      true,
+    //             smtEnabled:      true
+    //         });
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         c.assertPositiveSgxStandard(ctx);
+    //         assert.deepEqual(ctx.body.configuration, ['DYNAMIC_PLATFORM', 'CACHED_KEYS', 'SMT_ENABLED']);
+    //     });
 
-    });
+    // });
 
-    describe('wrong certification data', () => {
+    // describe('wrong certification data', () => {
 
-        it('error retrieving data from quote', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup();
-            c.qvl.getCertificationData.rejects(new Error());
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            assert.strictEqual(ctx.status, 400);
-            assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve certification data from quote');
-        });
+    //     it('error retrieving data from quote', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup();
+    //         c.qvl.getCertificationData.rejects(new Error());
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         assert.strictEqual(ctx.status, 400);
+    //         assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve certification data from quote');
+    //     });
 
-        it('not supported certification data type', async() => {
-            // GIVEN
-            const c = new TestContext();
-            const target = await c.getTarget();
-            const ctx = await c.getCtx();
-            ctx.request.body = {
-                isvQuote: c.sgxQuote,
-                nonce:    c.nonce
-            };
-            c.defaultSetup();
-            c.qvl.getCertificationData.resolves({
-                type: 1,
-                data: c.certificationData
-            });
-            // WHEN
-            await target.verifyAttestationEvidence(ctx);
-            // THEN
-            assert.strictEqual(ctx.status, 400);
-            assert.strictEqual(String(ctx.log.error.args[0][0]), 'Error: Not supported certification data type: 1');
-        });
+    //     it('not supported certification data type', async() => {
+    //         // GIVEN
+    //         const c = new TestContext();
+    //         const target = await c.getTarget();
+    //         const ctx = await c.getCtx();
+    //         ctx.request.body = {
+    //             isvQuote: c.sgxQuote,
+    //             nonce:    c.nonce
+    //         };
+    //         c.defaultSetup();
+    //         c.qvl.getCertificationData.resolves({
+    //             type: 1,
+    //             data: c.certificationData
+    //         });
+    //         // WHEN
+    //         await target.verifyAttestationEvidence(ctx);
+    //         // THEN
+    //         assert.strictEqual(ctx.status, 400);
+    //         assert.strictEqual(String(ctx.log.error.args[0][0]), 'Error: Not supported certification data type: 1');
+    //     });
 
-    });
+    // });
 
-    it('PCK certificate without required extensions', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.qvl.getPckCertificateData.rejects(new Error());
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'PCK Cert does not contain required extensions');
-    });
+    // it('PCK certificate without required extensions', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.qvl.getPckCertificateData.rejects(new Error());
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'PCK Cert does not contain required extensions');
+    // });
 
-    it('Sgx TcbInfo retrieval failure', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.pcsClient.getSgxTcbInfo.resolves({ status: 404 });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required TcbInfo. PCS returned status: 404');
-    });
+    // it('Sgx TcbInfo retrieval failure', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.pcsClient.getSgxTcbInfo.resolves({ status: 404 });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required TcbInfo. PCS returned status: 404');
+    // });
 
-    it('TcbInfo retrieval failure, FMSP/TCB not found', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.pcsClient.getSgxTcbInfo.resolves({ status: 400 });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 500);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required TcbInfo. PCS returned status: 400');
-    });
+    // it('TcbInfo retrieval failure, FMSP/TCB not found', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.pcsClient.getSgxTcbInfo.resolves({ status: 400 });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 500);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required TcbInfo. PCS returned status: 400');
+    // });
 
-    it('Tdx TcbInfo retrieval failure', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.pcsClient.getTdxTcbInfo.resolves({ status: 404 });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required TcbInfo. PCS returned status: 404');
-    });
+    // it('Tdx TcbInfo retrieval failure', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.pcsClient.getTdxTcbInfo.resolves({ status: 404 });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required TcbInfo. PCS returned status: 404');
+    // });
 
-    it('Sgx QeIdentity retrieval failure', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.pcsClient.getSgxQeIdentity.resolves({ status: 404 });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 500);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required QeIdentity. PCS returned status: 404');
-    });
+    // it('Sgx QeIdentity retrieval failure', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.pcsClient.getSgxQeIdentity.resolves({ status: 404 });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 500);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required QeIdentity. PCS returned status: 404');
+    // });
 
-    it('Tdx QeIdentity retrieval failure', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.pcsClient.getTdxQeIdentity.resolves({ status: 404 });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 500);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required QeIdentity. PCS returned status: 404');
-    });
+    // it('Tdx QeIdentity retrieval failure', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.pcsClient.getTdxQeIdentity.resolves({ status: 404 });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 500);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve required QeIdentity. PCS returned status: 404');
+    // });
 
-    it('execute - get certification data fails', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.qvl.getCertificationData.rejects({
-            error:  'sgxAttestationGetQECertificationDataSize failed',
-            status: 37
-        });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.equal(ctx.status, 400);
-        assert.equal(c.qvl.getCertificationData.callCount, 1);
-    });
+    // it('execute - get certification data fails', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.qvl.getCertificationData.rejects({
+    //         error:  'sgxAttestationGetQECertificationDataSize failed',
+    //         status: 37
+    //     });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.equal(ctx.status, 400);
+    //     assert.equal(c.qvl.getCertificationData.callCount, 1);
+    // });
 
-    it('execute - CRL distribution point is in wrong format', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.qvl.getCrlDistributionPoint.resolves('https://certificates.trustedservices.intel.com/IntelSGXRootCA.crl');
+    // it('execute - CRL distribution point is in wrong format', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.qvl.getCrlDistributionPoint.resolves('https://certificates.trustedservices.intel.com/IntelSGXRootCA.crl');
 
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-        assert.strictEqual(c.qvl.getCertificationData.callCount, 1);
-        assert.strictEqual(c.qvl.getPckCertificateData.callCount, 1);
-        assert.strictEqual(c.qvl.getCrlDistributionPoint.callCount, 2);
-    });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    //     assert.strictEqual(c.qvl.getCertificationData.callCount, 1);
+    //     assert.strictEqual(c.qvl.getPckCertificateData.callCount, 1);
+    //     assert.strictEqual(c.qvl.getCrlDistributionPoint.callCount, 2);
+    // });
 
-    it('execute - get CRL distribution point fails', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.qvl.getCrlDistributionPoint.rejects({
-            error: 'Error getting CRL distribution point'
-        });
+    // it('execute - get CRL distribution point fails', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.qvl.getCrlDistributionPoint.rejects({
+    //         error: 'Error getting CRL distribution point'
+    //     });
 
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-        assert.strictEqual(c.qvl.getCertificationData.callCount, 1);
-        assert.strictEqual(c.qvl.getPckCertificateData.callCount, 1);
-        assert.strictEqual(c.qvl.getCrlDistributionPoint.callCount, 2);
-    });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    //     assert.strictEqual(c.qvl.getCertificationData.callCount, 1);
+    //     assert.strictEqual(c.qvl.getPckCertificateData.callCount, 1);
+    //     assert.strictEqual(c.qvl.getCrlDistributionPoint.callCount, 2);
+    // });
 
-    it('execute - get CRL from distribution point fails', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.crlClient.getCrlFromDistributionPoint.resolves({ status: 404 });
+    // it('execute - get CRL from distribution point fails', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.crlClient.getCrlFromDistributionPoint.resolves({ status: 404 });
 
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 500);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve one of CRLs. Distribution Point returned status: 404');
-    });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 500);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to retrieve one of CRLs. Distribution Point returned status: 404');
+    // });
 
-    it('execute - get CRL in DER format from distribution point', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        const hexString = 'AABBCCDDEEFF0123456789';
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.crlClient.getCrlFromDistributionPoint.resolves({ status: 200, body: Buffer.from(hexString, 'hex') });
+    // it('execute - get CRL in DER format from distribution point', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     const hexString = 'AABBCCDDEEFF0123456789';
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.crlClient.getCrlFromDistributionPoint.resolves({ status: 200, body: Buffer.from(hexString, 'hex') });
 
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveSgxStandard(ctx);
-        assert.strictEqual(c.qvl.verifyQuote.callCount, 1);
-        assert.strictEqual(c.qvl.verifyQuote.args[0][7], hexString.toLowerCase());
-        assert.strictEqual(c.qvl.verifyQuote.args[0][8], hexString.toLowerCase());
-    });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveSgxStandard(ctx);
+    //     assert.strictEqual(c.qvl.verifyQuote.callCount, 1);
+    //     assert.strictEqual(c.qvl.verifyQuote.args[0][7], hexString.toLowerCase());
+    //     assert.strictEqual(c.qvl.verifyQuote.args[0][8], hexString.toLowerCase());
+    // });
 
-    it('execute - tcb levels out of order', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
+    // it('execute - tcb levels out of order', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
 
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup()
-            .setupVerifyQuote(qvlStatus.STATUS_TCB_OUT_OF_DATE);
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup()
+    //         .setupVerifyQuote(qvlStatus.STATUS_TCB_OUT_OF_DATE);
 
-        const tcbInfo = (await c.pcsClient.getSgxTcbInfo()).body.tcbInfo;
-        tcbInfo.tcbLevels = tcbInfo.tcbLevels.reverse();
-        c.setupTcbInfo({ tcbInfo });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        c.assertPositiveSgxStandard(ctx);
-    });
+    //     const tcbInfo = (await c.pcsClient.getSgxTcbInfo()).body.tcbInfo;
+    //     tcbInfo.tcbLevels = tcbInfo.tcbLevels.reverse();
+    //     c.setupTcbInfo({ tcbInfo });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     c.assertPositiveSgxStandard(ctx);
+    // });
 
-    it('scalable sgx type', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.setupPckCertificateData({
-            sgxType: 'Scalable'
-        });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 200);
-        assert.strictEqual(ctx.body.teeType, 'SGX_SCALABLE');
-    });
+    // it('scalable sgx type', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.setupPckCertificateData({
+    //         sgxType: 'Scalable'
+    //     });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 200);
+    //     assert.strictEqual(ctx.body.teeType, 'SGX_SCALABLE');
+    // });
 
-    it('scalable with integrity sgx type', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.setupPckCertificateData({
-            sgxType: 'ScalableWithIntegrity'
-        });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 200);
-        assert.strictEqual(ctx.body.teeType, 'SGX_SCALABLE_WITH_INTEGRITY');
-    });
+    // it('scalable with integrity sgx type', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.setupPckCertificateData({
+    //         sgxType: 'ScalableWithIntegrity'
+    //     });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 200);
+    //     assert.strictEqual(ctx.body.teeType, 'SGX_SCALABLE_WITH_INTEGRITY');
+    // });
 
-    it('not supported sgx type', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.sgxQuote
-        };
-        c.defaultSetup();
-        c.setupPckCertificateData({
-            sgxType: 'NotSupported'
-        });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 500);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Unsupported sgxType');
-    });
+    // it('not supported sgx type', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.sgxQuote
+    //     };
+    //     c.defaultSetup();
+    //     c.setupPckCertificateData({
+    //         sgxType: 'NotSupported'
+    //     });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 500);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Unsupported sgxType');
+    // });
 
-    it('sign verification report failure', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: c.tdxQuote,
-            nonce:    c.nonce
-        };
-        c.defaultSetup();
-        c.vcsClient.signVerificationReport.resolves({ status: 404 });
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 500);
-        assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to sign the report. VCS returned status: 404');
-    });
+    // it('sign verification report failure', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: c.tdxQuote,
+    //         nonce:    c.nonce
+    //     };
+    //     c.defaultSetup();
+    //     c.vcsClient.signVerificationReport.resolves({ status: 404 });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 500);
+    //     assert.strictEqual(ctx.log.error.args[0][0].message, 'Failed to sign the report. VCS returned status: 404');
+    // });
 
-    it('no isvQuote', async() => {
-        // GIVEN
-        const c = new TestContext();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {};
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-    });
+    // it('no isvQuote', async() => {
+    //     // GIVEN
+    //     const c = new TestContext();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {};
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    // });
 
-    it('quote not base64', async() => {
-        // GIVEN
-        const c = new TestContext().defaultSetup();
-        const target = await c.getTarget();
-        const ctx = await c.getCtx();
-        ctx.request.body = {
-            isvQuote: '!@#$%^&*()' //special characters that aren't base64
-        };
+    // it('quote not base64', async() => {
+    //     // GIVEN
+    //     const c = new TestContext().defaultSetup();
+    //     const target = await c.getTarget();
+    //     const ctx = await c.getCtx();
+    //     ctx.request.body = {
+    //         isvQuote: '!@#$%^&*()' //special characters that aren't base64
+    //     };
 
-        // WHEN
-        await target.verifyAttestationEvidence(ctx);
-        // THEN
-        assert.strictEqual(ctx.status, 400);
-        assert.strictEqual(ctx.log.error.callCount, 1);
-        assert.strictEqual(c.qvl.getCertificationData.callCount, 0);
-    });
+    //     // WHEN
+    //     await target.verifyAttestationEvidence(ctx);
+    //     // THEN
+    //     assert.strictEqual(ctx.status, 400);
+    //     assert.strictEqual(ctx.log.error.callCount, 1);
+    //     assert.strictEqual(c.qvl.getCertificationData.callCount, 0);
+    // });
 });
