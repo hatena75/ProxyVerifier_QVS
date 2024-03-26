@@ -129,12 +129,12 @@ namespace intel::sgx::dcap::qvlwrapper {
         }
         fclose(csr_file);
 
-        // FILE *key_file;
-        // key_file = fopen("delegationkey.pem", "wb");
-        // if (!PEM_write_PrivateKey(key_file, ec_delegation_pkey, NULL, NULL, 0, 0, NULL)) {
-        //     printf("PEM_write_PrivateKey error\n");
-        // }
-        // fclose(key_file);
+        FILE *key_file;
+        key_file = fopen("delegationkey.pem", "wb");
+        if (!PEM_write_PrivateKey(key_file, ec_delegation_pkey, NULL, NULL, 0, 0, NULL)) {
+            printf("PEM_write_PrivateKey error\n");
+        }
+        fclose(key_file);
 
         // print CSR
         // unsigned char *buf_csr = (unsigned char *) malloc (cert_size + 1);
