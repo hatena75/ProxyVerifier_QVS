@@ -4,3 +4,4 @@ src/qvl/cmake-*
 src/node_modules
 test/node_modules
 test/.nyc_output
+.vscode/
