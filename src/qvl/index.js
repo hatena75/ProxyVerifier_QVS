@@ -96,12 +96,13 @@ async function getCrlDistributionPoint(reqId, pemCertificate) {
  * @param {string} rootCrl - hex encoded CRL
  * @param {string} trustedRootPem - PEM format
  * @param {string} tcbSigningChainTrustedRoot - PEM format
+ * @param {string} delegationSig - delegation signature on base64
  * @returns {Promise<{status: number, error: (string|undefined), errorSource: (number|undefined)}>}
  */
 async function verifyQuote(reqId, quote, pckCertPem, tcbInfo, qeIdentity, pckCertIssuerCertChain, tcbInfoIssuerChain,
-                           pckCertCrl, rootCrl, trustedRootPem, tcbSigningChainTrustedRoot) {
+                           pckCertCrl, rootCrl, trustedRootPem, tcbSigningChainTrustedRoot, delegationSig) {
     return wrapper.verifyQuote(reqId, quote, pckCertPem, tcbInfo, qeIdentity, pckCertIssuerCertChain,
-        tcbInfoIssuerChain, pckCertCrl, rootCrl, trustedRootPem, tcbSigningChainTrustedRoot);
+        tcbInfoIssuerChain, pckCertCrl, rootCrl, trustedRootPem, tcbSigningChainTrustedRoot, delegationSig);
 }
 
 /**

@@ -66,6 +66,8 @@ namespace intel::sgx::dcap::qvlwrapper {
             SetError("Quote verification failed");
             return;
         }
+
+        delegationSig = "OK";
     }
 
     void VerifyQuoteWorker::OnOK() {

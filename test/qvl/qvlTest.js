@@ -210,6 +210,7 @@ JsrtAiEA4/5hDa8ri0X4kBaFfe9d0oCqaN8tXA0fuslGoZVhzmU=
         this.pckCertIssuerCertChain = `${this.rootCaCert}\n${this.intermediateCert}`;
         this.intermediateCrl = '308201293081d1020101300a06082a8648ce3d04030230713123302106035504030c1a496e74656c205347582050434b2050726f636573736f72204341311a3018060355040a0c11496e74656c20436f72706f726174696f6e3114301206035504070c0b53616e746120436c617261310b300906035504080c024341310b3009060355040613025553170d3232303531393038343931355a170d3439313030343038343931355aa02f302d300a0603551d140403020101301f0603551d23041830168014288910fbe00418a0383f52b53f1d47c032e2b2f3300a06082a8648ce3d04030203470030440220619b3d28a4d71d4932da0fa18c66968917f89fa65ebf8ca1281e9ea6f973b87c02202a6c92f5d447f35d765fad76cdfc1da10e106c09488a59bee92d69bad8f1315c';
         this.rootCrl = '308201213081c8020101300a06082a8648ce3d0403023068311a301806035504030c11496e74656c2053475820526f6f74204341311a3018060355040a0c11496e74656c20436f72706f726174696f6e3114301206035504070c0b53616e746120436c617261310b300906035504080c024341310b3009060355040613025553170d3232303531393038343931355a170d3439313030343038343931355aa02f302d300a0603551d140403020101301f0603551d230418301680143143903c72acefc8c8802756fb994de40888b51a300a06082a8648ce3d0403020348003045022100bc0980401119231caca34a76bbfd47e44127aa5f7f6e66bac8144554ef91165902203091aaa5900c90eabc8a617ad03a41b91f8e19bab3258a75198c10a652b1f522';
+        this.delegationSig = "delegationSig"
     }
 
     async getTarget() {
@@ -376,7 +377,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status: qvlStatus.STATUS_OK
@@ -390,7 +391,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, 'GARBAGE', c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_UNSUPPORTED_CERT_FORMAT,
@@ -405,7 +406,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, 'GARBAGE', c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_SGX_TCB_INFO_UNSUPPORTED_FORMAT,
@@ -420,7 +421,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, 'GARBAGE', c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_SGX_ENCLAVE_IDENTITY_UNSUPPORTED_FORMAT,
@@ -435,7 +436,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, 'GARBAGE', c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_UNSUPPORTED_CERT_FORMAT,
@@ -450,7 +451,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, 'GARBAGE',
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_UNSUPPORTED_CERT_FORMAT,
@@ -465,7 +466,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            'GARBAGE', c.rootCrl, c.rootCaCert, c.rootCaCert);
+            'GARBAGE', c.rootCrl, c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_SGX_CRL_UNSUPPORTED_FORMAT,
@@ -480,7 +481,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, 'GARBAGE', c.rootCaCert, c.rootCaCert);
+            c.intermediateCrl, 'GARBAGE', c.rootCaCert, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_SGX_CRL_UNSUPPORTED_FORMAT,
@@ -495,7 +496,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, 'GARBAGE', c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, 'GARBAGE', c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_TRUSTED_ROOT_CA_UNSUPPORTED_FORMAT,
@@ -510,7 +511,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, 'GARBAGE');
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, 'GARBAGE', c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_UNSUPPORTED_CERT_FORMAT,
@@ -525,7 +526,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCertNotTrusted);
+            c.intermediateCrl, c.rootCrl, c.rootCaCert, c.rootCaCertNotTrusted, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_SGX_TCB_SIGNING_CERT_CHAIN_UNTRUSTED,
@@ -540,7 +541,7 @@ describe('qvlTest', () => {
         const quote = Buffer.from(c.quote, 'base64');
 
         const result = await wrapper.verifyQuote('test-request-id', quote, c.standardPckCertificate, c.tcbInfo, c.qeIdentity, c.pckCertIssuerCertChain, c.tcbSigningCertChain,
-            c.intermediateCrl, c.rootCrl, c.rootCaCertNotTrusted, c.rootCaCert);
+            c.intermediateCrl, c.rootCrl, c.rootCaCertNotTrusted, c.rootCaCert, c.delegationSig);
 
         assert.deepEqual(result, {
             status:      qvlStatus.STATUS_SGX_PCK_CERT_CHAIN_UNTRUSTED,

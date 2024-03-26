@@ -124,6 +124,7 @@ async function verifyAttestationEvidence(ctx) {
     let pckCertData;
     let rootCaPem; let intermediateCaPem; let pckCertPem;
     let pckCertCrlDistributionPoint; let rootCaCrlDistributionPoint;
+    let delegationSig = "";
     try {
         certificationData = await getType5CertificationDataFromQuote(ctx.reqId, quote);
         ({ rootCaPem, intermediateCaPem, pckCertPem } = await certificateChainParser.parseCertificateChainWithSpecificRoot(trustedRootPublicKey, certificationData));
@@ -161,7 +162,7 @@ async function verifyAttestationEvidence(ctx) {
         const tcbInfoString = JSON.stringify(tcbInfo);
         const qeIdentityString = JSON.stringify(qeIdentity);
 
-        const result = await qvl.verifyQuote(ctx.reqId, quote, pckCertPem, tcbInfoString, qeIdentityString, caChain, tcbInfoSigningChain, pckCertCrl, rootCrl, rootCaPem, tcbInfoSigningChainData.rootCaPem);
+        const result = await qvl.verifyQuote(ctx.reqId, quote, pckCertPem, tcbInfoString, qeIdentityString, caChain, tcbInfoSigningChain, pckCertCrl, rootCrl, rootCaPem, tcbInfoSigningChainData.rootCaPem, delegationSig);
 
         const { status, isvQuoteStatus } = parseStatus(result.status, result.errorSource, ctx.log);
         if (status !== 200) {

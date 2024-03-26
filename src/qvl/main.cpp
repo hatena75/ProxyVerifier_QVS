@@ -113,6 +113,7 @@ Napi::Value VerifyQuote(const Napi::CallbackInfo &info) {
     auto rootCaCrl = std::string(info[8].As<Napi::String>());
     auto trustedRootCaPem = std::string(info[9].As<Napi::String>());
     auto tcbInfoSigningChainTrustedRoot = std::string(info[10].As<Napi::String>());
+    auto delegationSig = std::string(info[11].As<Napi::String>());
 
     auto deferred = Napi::Promise::Deferred::New(env);
 
@@ -120,7 +121,7 @@ Napi::Value VerifyQuote(const Napi::CallbackInfo &info) {
                                         std::move(pckCert), std::move(tcbInfo), std::move(qeIdentity),
                                         std::move(pckCertIssuerCertChain), std::move(tcbInfoIssuerCertChain),
                                         std::move(pckCrl), std::move(rootCaCrl), std::move(trustedRootCaPem),
-                                        std::move(tcbInfoSigningChainTrustedRoot));
+                                        std::move(tcbInfoSigningChainTrustedRoot), std::move(delegationSig));
 
     worker->Queue();
     return deferred.Promise();

@@ -52,7 +52,8 @@ namespace intel::sgx::dcap::qvlwrapper {
                           std::string pckCrl,
                           std::string rootCaCrl,
                           std::string trustedRootCaPem,
-                          std::string tcbInfoSigningChainTrustedRoot)
+                          std::string tcbInfoSigningChainTrustedRoot,
+                          std::string delegationSig)
                 : BaseWorker(env, promise, requestId),
                   quote(quote),
                   quoteSize(quoteSize),
@@ -64,7 +65,8 @@ namespace intel::sgx::dcap::qvlwrapper {
                   pckCrl(std::move(pckCrl)),
                   rootCaCrl(std::move(rootCaCrl)),
                   trustedRootCaPem(std::move(trustedRootCaPem)),
-                  tcbInfoSigningChainTrustedRoot(std::move(tcbInfoSigningChainTrustedRoot)) {}
+                  tcbInfoSigningChainTrustedRoot(std::move(tcbInfoSigningChainTrustedRoot)),
+                  delegationSig(std::move(delegationSig)) {}
 
         ~VerifyQuoteWorker() override = default;
 
@@ -86,6 +88,7 @@ namespace intel::sgx::dcap::qvlwrapper {
         std::string rootCaCrl;
         std::string trustedRootCaPem;
         std::string tcbInfoSigningChainTrustedRoot;
+        std::string delegationSig;
 
         Status qvlStatus = STATUS_OK;
         VerifyQuoteErrorSource errorSource{};
