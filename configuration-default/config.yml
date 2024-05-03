@@ -44,7 +44,7 @@ logger:
   # volumen /logs will not be mounted ...
   category:           '${QVS_LOGGER_CATEGORY:QuoteVerificationService}'
   levelFile:          '${QVS_LOGGER_LEVEL_FILE:off}' # You have to mount a directory with r/w rights
-  levelConsole:       '${QVS_LOGGER_LEVEL_CONSOLE:trace}'
+  levelConsole:       '${QVS_LOGGER_LEVEL_CONSOLE:warn}'
   fileName:           '${QVS_LOGGER_FILE_NAME:}' # You have to mount a directory with r/w rights
   multilineErrorLog:  '${QVS_LOGGER_MULTILINE_ERROR_LOG:true}'
 
