@@ -246,7 +246,7 @@ async function verifyAttestationEvidence(ctx) {
         signer.update(data);
         const delegationSignature = signer.sign(privateKey, 'base64');
         //console.log('delegationsignature :', delegationSignature);
-        ctx.set('Result of base64', data);
+        //console.log('data : ', data);
         ctx.set('DelegationSignature', delegationSignature);
 
         await signReport(report, ctx);
