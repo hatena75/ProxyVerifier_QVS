@@ -1,5 +1,30 @@
-# Intel® Software Guard Extensions and Intel® Trust Domain Extensions Data Center Attestation Primitives (Intel® SGX and Intel® TDX DCAP) Quote Verification Service
+# ProxyVerifier_QVS
+ProxyVerifier_QVS is based from Intel® Software Guard Extensions and Intel® Trust Domain Extensions Data Center Attestation Primitives (Intel® SGX and Intel® TDX DCAP) Quote Verification Service (https://github.com/intel/SGX-TDX-DCAP-QuoteVerificationService).
 
+## Build Normal Container
+You can build QVS without SGX protection by following [Quick Setup in Quote Verification Service](https://github.com/intel/SGX-TDX-DCAP-QuoteVerificationService?tab=readme-ov-file#quick-setup) README.
+
+## Build SGX Container
+You can apply gsc to Normal Container. The method is traced in [the gsc manual](https://gramine.readthedocs.io/projects/gsc/en/latest/#example).
+
+1\. Generate the signing key (if you don’t already have a key):
+```
+$ openssl genrsa -3 -out enclave-key.pem 3072
+```
+2\. Graminize the Python image using `gsc build`:
+```
+ProxyVerifier_QVS/gsc$ ./gsc build --insecure-args qvs test/generic.manifest
+```
+3\. Sign the graminized Docker image using `gsc sign-image`:
+```
+ProxyVerifier_QVS/gsc$ ./gsc sign-image qvs enclave-key.pem
+```
+4\. Run graminized qvs:
+```
+ProxyVerifier_QVS$ ./rungramineQVS.sh
+```
+
+<!--
 ## Introduction
 
 Quote Verification Service is a stateless server endpoint implementation that verifies attestation evidence (quote) of ISV (Independent Software Vendor) enclaves.
@@ -229,3 +254,4 @@ You can paste it on [https://editor.swagger.io/](https://editor.swagger.io/) sit
 | teeType | String | Mandatory | One of the following values: <ul><li>SGX</li><li>TDX</li></ul> |
 | attestationType | String | Mandatory | One of the following values: <ul><li>ECDSA</li></ul> |
 | configuration | Array of strings | Optional | Possible values in the array: <ul><li>Dynamic platform</li><li>Cached keys</li><li>SMT enabled</li></ul> |
+-->
