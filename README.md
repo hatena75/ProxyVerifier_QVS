@@ -17,6 +17,7 @@ Our experimental environment is as follows:
 | SGX PSW | 1.19.100.3-jammy1 |
 | Gramine | v1.7 ([from gsc](https://gramine.readthedocs.io/projects/gsc/en/stable/index.html#configuration))|
 
+# How to Build and Run
 
 ## Normal Container
 You can build QVS without SGX protection by following [Quick Setup in Quote Verification Service](https://github.com/intel/SGX-TDX-DCAP-QuoteVerificationService?tab=readme-ov-file#quick-setup) README.
