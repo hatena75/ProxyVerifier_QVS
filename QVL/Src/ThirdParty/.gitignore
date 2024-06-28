@@ -1,4 +1,4 @@
-openssl
+openssl/*
 !openssl/hunter.cmake
 gtest
 hunter/_Base
