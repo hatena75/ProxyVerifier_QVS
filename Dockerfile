@@ -54,7 +54,7 @@ RUN apt-get update \
 COPY build/qvls /qvl
 # build and test QVL
 WORKDIR /qvl
-RUN ./runUT -DBUILD_LOGS=OFF
+RUN ./runUT -DBUILD_LOGS=ON
 
 FROM node:lts-slim AS qvs-builder
 ENV DEBIAN_FRONTEND=noninteractive
