@@ -23,6 +23,7 @@ RUN apt-get update \
            python3-jinja2 \
            python3-tomli \
            python3-tomli-w \
+           python3-voluptuous \
         {%- else %}
            python3-pip \
            && /usr/bin/python3 -B -m pip install click jinja2 \
