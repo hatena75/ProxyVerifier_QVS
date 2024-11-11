@@ -1,0 +1,58 @@
+[loader]
+entrypoint = "file:/usr/lib/x86_64-linux-gnu/gramine/libsysdb.so"
+log_level = "error"
+
+[loader.env]
+LD_LIBRARY_PATH = "/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu"
+
+[libos]
+entrypoint = "/client"
+check_invalid_pointers = false
+
+[fs]
+mounts = [
+    { path = "/lib", uri = "file:/usr/lib/x86_64-linux-gnu/gramine/runtime/glibc" },
+    { path = "/lib/x86_64-linux-gnu", uri = "file:/lib/x86_64-linux-gnu" },
+    { path = "/usr/lib/x86_64-linux-gnu", uri = "file:/usr/lib/x86_64-linux-gnu" },
+    { path = "/client", uri = "file:client" },
+    { path = "/ca.crt", uri = "file:../ssl/ca.crt" },
+    { path = "/etc/hosts", uri = "file:../helper-files/hosts" },
+]
+
+[sys]
+enable_extra_runtime_domain_names_conf = true
+insecure__allow_eventfd = true
+
+[sgx]
+allowed_files = [
+    "file:/QVS/delegation.csr",
+    "file:/QVS/delegationkey.pem",
+]
+preheat_enclave = true
+enclave_size = "512M"
+debug = true
+edmm_enable = false
+remote_attestation = "dcap"
+ra_client_spid = ""
+ra_client_linkable = false
+trusted_files = [
+    { uri = "file:/usr/lib/x86_64-linux-gnu/gramine/libsysdb.so" },
+    { uri = "file:client" },
+    { uri = "file:/usr/lib/x86_64-linux-gnu/gramine/runtime/glibc/" },
+    { uri = "file:/lib/x86_64-linux-gnu/" },
+    { uri = "file:/usr/lib/x86_64-linux-gnu/" },
+    { uri = "file:../ssl/ca.crt" },
+    { uri = "file:../helper-files/" },
+]
+max_threads = 4
+isvprodid = 0
+isvsvn = 0
+enable_stats = false
+use_exinfo = false
+
+[sgx.cpu_features]
+avx = "unspecified"
+avx512 = "unspecified"
+amx = "unspecified"
+mpx = "disabled"
+pkru = "disabled"
