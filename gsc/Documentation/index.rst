@@ -39,9 +39,6 @@ image.
 Prerequisites
 =============
 
-The installation descriptions of prerequisites are for Ubuntu 20.04 and may
-differ when using a different Ubuntu version or Linux distribution.
-
 Software packages
 -----------------
 
@@ -49,10 +46,20 @@ Please install the ``docker.io``, ``python3``, ``python3-pip`` packages. In
 addition, install the Docker client, Jinja2, TOML, and YAML python packages via
 pip. GSC requires Python 3.6 or later.
 
+For Ubuntu 22.04:
+
 .. code-block:: sh
 
-   sudo apt-get install docker.io python3 python3-pip
+   sudo apt-get update && sudo apt-get install -y docker.io python3 python3-pip
    pip3 install docker jinja2 tomli tomli-w pyyaml
+
+For Ubuntu 24.04:
+
+.. code-block:: sh
+
+   sudo apt-get update && sudo apt-get install -y docker.io python3 \
+      python3-docker python3-jinja2 python3-tomli \
+      python3-tomli-w python3-yaml
 
 SGX software stack
 ------------------
@@ -315,9 +322,10 @@ in :file:`config.yaml.template`.
    Defines Linux distribution to be used to build Gramine in. This distro should
    match the distro of the supplied Docker image; otherwise the results may be
    unpredictable. Currently supported distros are Ubuntu 20.04, Ubuntu 21.04,
-   Ubuntu 22.04, Ubuntu 23.04, Debian 10, Debian 11, Debian 12, CentOS 8,
-   Red Hat Universal Base Image (UBI) 8 and Red Hat Universal Base Image (UBI)
-   8 minimal.
+   Ubuntu 22.04, Ubuntu 23.04, Debian 10, Debian 11, Debian 12, CentOS 8, CentOS
+   Stream 9, Red Hat Universal Base Image (UBI) 8, Red Hat Universal Base Image
+   (UBI) 9, Red Hat Universal Base Image (UBI) 8 minimal, Red Hat Universal Base Image
+   9 minimal and SUSE Linux Enterprise Server 15.
 
    Default value is ``auto`` which means GSC automatically detects the distro
    of the supplied Docker image. Users also have the option to provide one of
@@ -325,8 +333,8 @@ in :file:`config.yaml.template`.
 
    .. warning::
       Please register and subscribe your host RHEL system to the Red Hat
-      Customer Portal to use Red Hat Universal Base Image (UBI) 8 and
-      UBI8-minimal distros.
+      Customer Portal to use Red Hat Universal Base Image (UBI) 8, Red Hat
+      Universal Base Image (UBI) 9, UBI8-minimal and UBI9-minimal distros.
 
 .. describe:: Registry
 
@@ -396,26 +404,27 @@ executable arguments may be supplied to the :command:`docker run` command.
    :command:`gsc build`.
 
 
-Execute with Linux PAL (:program:`gramine-direct`)
---------------------------------------------------
+Execute with :program:`gramine-direct`
+--------------------------------------
 
-You may select the Linux PAL (:program:`gramine-direct`) at Docker run time
-instead of the Linux-SGX PAL (:program:`gramine-sgx`) by specifying the
-environment variable :envvar:`GSC_PAL` as an option to the
-:command:`docker run` command. When using the Linux PAL, it is not necessary
-to sign the image via a :command:`gsc sign-image` command.
+By default, the Docker container starts :program:`gramine-sgx`.
 
-.. envvar:: GSC_PAL
+You may choose to start :program:`gramine-direct` in the Docker container by
+specifying the environment variable :envvar:`GRAMINE_MODE` as a command-line
+option to :command:`docker run`.
 
-   This environment variable specifies the pal loader.
+.. envvar:: GRAMINE_MODE
 
-GSC requires a custom seccomp profile while running with Linux PAL, which has to be
-specified at Docker run time. There are two options:
+   This environment variable specifies the mode of Gramine to run. Currently
+   supported values are ``direct`` and ``sgx``. Default is ``sgx``.
+
+GSC requires a custom seccomp profile for the ``direct`` mode. There are two
+options:
 
 #. Pass `unconfined` to run the container without the default seccomp profile.
    This option is generally considered insecure, since this results in containers
    running with unrestricted system calls (all system calls are allowed which
-   increases the attack surface of the Linux Kernel).
+   increases the attack surface of the Linux kernel).
 
 #. Pass the custom seccomp profile
    https://github.com/gramineproject/gramine/blob/master/scripts/docker_seccomp.json.
@@ -426,7 +435,13 @@ specified at Docker run time. There are two options:
 
 .. code-block:: sh
 
-   docker run ... --env GSC_PAL=Linux --security-opt seccomp=<profile> gsc-<image-name> ...
+   docker run ... --env GRAMINE_MODE=direct \
+       --security-opt seccomp=<profile> \
+       gsc-<image-name> ...
+
+.. note::
+    Previously, to run in ``direct`` mode, one specified ``--env
+    GSC_PAL=Linux``. This is deprecated in GSC v1.8 and will be removed in v1.9.
 
 Example
 =======
