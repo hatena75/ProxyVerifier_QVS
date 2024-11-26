@@ -33,7 +33,7 @@ QVS_DIR="$(cd "$(dirname "$0")" || exit 1; pwd)"
 
 source ${QVS_DIR}/configUtils.sh
 
-docker run --device=/dev/sgx_enclave -u root\
+docker run --device=/dev/sgx_enclave -u root \
         -v /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket \
         --name gsc-qvs --net=host --rm gsc-qvs:latest # -v ${QVS_DIR}/configuration-default/certificates:/QVS/configuration-default/certificates --env-file ${QVS_DIR}/default.env & 
 

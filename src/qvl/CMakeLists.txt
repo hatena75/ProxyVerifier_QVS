@@ -57,8 +57,14 @@ message(STATUS "ATTESTATIONPARSERS_LIB_NAME set to ${ATTESTATIONPARSERS_LIB_NAME
 find_library(QVL NAMES ${QVL_LIB_NAME} PATHS ${QVL_PATH}/lib)
 find_library(AttestationParsers NAMES ${ATTESTATIONPARSERS_LIB_NAME} PATHS ${QVL_PATH}/lib)
 find_library(AttestationCommons NAMES ${ATTESTATIONCOMMONS_LIB_NAME} PATHS ${QVL_PATH}/lib)
+find_library(SecretProv NAMES libsecret_prov_attest.so PATHS /gramine/meson_build_output/lib/x86_64-linux-gnu)
+find_library(SecretProvDcap NAMES libsecret_prov_verify.a PATHS /gramine/meson_build_output/lib/x86_64-linux-gnu)
 
-file(GLOB SOURCE_FILES *.cpp *.h)
+message(STATUS "Found library : ${SecretProv}")
+message(STATUS "Found library : ${SecretProvDcap}")
+
+
+file(GLOB_RECURSE SOURCE_FILES *.cpp *.h) # RECURSE for .h
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${CMAKE_JS_SRC})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
@@ -79,6 +85,7 @@ message(STATUS "CMAKE_JS_INC set to ${CMAKE_JS_INC}")
 target_include_directories(${PROJECT_NAME}
     PRIVATE ${NODE_ADDON_API_DIR}
     PRIVATE ${CMAKE_JS_INC}
-    PRIVATE ${QVL_PATH}/include)
+    PRIVATE ${QVL_PATH}/include
+    PRIVATE /gramine/meson_build_output/include/gramine)
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB} ${QVL} ${AttestationParsers} ${AttestationCommons})
+target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB} ${QVL} ${AttestationParsers} ${AttestationCommons} ${SecretProv} ${SecretProvDcap})

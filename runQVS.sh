@@ -33,7 +33,7 @@ QVS_DIR="$(cd "$(dirname "$0")" || exit 1; pwd)"
 
 source ${QVS_DIR}/configUtils.sh
 
-docker run --name qvs --network host   --rm qvs:latest & # -v ${QVS_DIR}/configuration-default/certificates:/QVS/configuration-default/certificates --env-file ${QVS_DIR}/default.env
+docker run --name qvs --network host -u root --rm qvs:latest & # -v ${QVS_DIR}/configuration-default/certificates:/QVS/configuration-default/certificates --env-file ${QVS_DIR}/default.env
 
 echo 'Veryfying QVS HTTPS endpoint...'
 waitForHttpsServiceToStart 8799

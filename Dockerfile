@@ -27,6 +27,52 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+FROM debian:12 AS gramine
+
+# Install Gramine dependencies
+RUN env DEBIAN_FRONTEND=noninteractive apt-get update && \
+    env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        autoconf bison build-essential cmake coreutils curl gawk git \
+        libprotobuf-c-dev linux-headers-generic nasm ninja-build \
+        pkg-config protobuf-c-compiler protobuf-compiler python3 \
+        python3-cryptography python3-protobuf wget meson python3-tomli \
+        python3-tomli-w wget gnupg
+
+# COPY ./intel-sgx-deb.key /
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' \
+    > /etc/apt/sources.list.d/intel-sgx.list \
+    && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
+
+RUN env DEBIAN_FRONTEND=noninteractive apt-get update \
+    && env DEBIAN_FRONTEND=noninteractive apt-get install -y libsgx-dcap-quote-verify-dev
+
+# Install Gramine
+RUN git clone https://github.com/gramineproject/gramine.git /gramine
+
+RUN cd /gramine \
+    && git fetch origin master \
+    && git checkout master
+        
+        
+RUN mkdir -p /gramine/driver/asm \
+    && cd /gramine/driver/asm \
+    && wget --timeout=10 -O sgx.h \
+        https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/arch/x86/include/uapi/asm/sgx.h?h=v5.11 \
+    && sha256sum sgx.h | grep -q a34a997ade42b61376b1c5d3d50f839fd28f2253fa047cb9c0e68a1b00477956
+
+
+RUN cd /gramine \
+    && meson setup build/ --prefix="/gramine/meson_build_output" \
+        --buildtype=release \
+        -Ddirect=enabled -Dsgx=enabled \
+        \
+        \
+        -Dsgx_driver=upstream -Dsgx_driver_include_path=/gramine/driver \
+        \
+    && ninja -C build \
+    && ninja -C build install
+
+
 FROM node:lts-slim AS qvl-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -50,7 +96,7 @@ RUN apt-get update \
  && mkdir /tmp/fips && cp /tmp/openssl/providers/fips.so /tmp/fips && cp /tmp/openssl/providers/fipsmodule.cnf /tmp/fips \
  && rm -rf /tmp/openssl.tar.gz /tmp/openssl
 
-# copy QVL sources
+ # copy QVL sources
 COPY build/qvls /qvl
 # build and test QVL
 WORKDIR /qvl
@@ -61,12 +107,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get upgrade --assume-yes -o Dpkg::Options::="--force-confold" \
  && apt-get install --assume-yes --no-install-recommends ca-certificates=\* build-essential=\* cmake=\* \
- && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
  
 COPY --from=qvl-builder --chown=node:node /qvl /qvl
 # copy QVS source files
 COPY src /qvs/src
 COPY configuration-default /qvs/configuration-default
+
+# Add gramine from gramine stage
+COPY --from=gramine --chown=node:node /gramine/meson_build_output /gramine/meson_build_output
+
 # build QVS
 RUN echo 'cmake_QVL_PATH=/qvl/Build/Release/dist' >> /qvs/src/.npmrc # workaround for npm 9+ https://github.com/npm/cli/issues/5852
 WORKDIR /qvs/src
@@ -97,14 +147,20 @@ RUN rm -rf /usr/local/lib/node_modules/ \
 
 # Update the OS and install required dependencies
 RUN apt-get update && \
+    apt-get install -y binutils && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --assume-yes -o Dpkg::Options::="--force-confold" && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Add QVS files from builder
 COPY --from=qvs-builder --chown=node:node qvs/native /QVS/native
 COPY --from=qvs-builder --chown=node:node qvs/configuration-default/config.yml /QVS/configuration-default/config.yml
 COPY --from=qvs-builder --chown=node:node qvs/src /QVS/src
 COPY --from=qvl-builder --chown=node:node tmp/fips /QVS/src/fips
+
+# Add gramine from gramine stage
+COPY --from=gramine --chown=node:node /gramine/meson_build_output /gramine/meson_build_output
+# Include Meson build output directory in $PATH
+ENV PATH="/gramine/meson_build_output/bin:$PATH"
 
 # For QVS (my modification)
 COPY --chown=node:node configuration-default/certificates /QVS/configuration-default/certificates
@@ -116,9 +172,10 @@ ENV QVS_SERVICE_CERT_FILE=certificates/qvs-cert.pem \
     QVS_VCS_CLIENT_CERT_FILE=certificates/qvs-to-sss-client-cert.pem \
     QVS_VCS_CLIENT_KEY_FILE=certificates/qvs-to-sss-client-key.pem \
     QVS_ATTESTATION_REPORT_SIGNING_CERTIFICATE=SIGNING_KEY_CERTIFCATE_URL_ENCODED \
-    QVS_VCS_CLIENT_SERVERNAME=localhost
+    QVS_VCS_CLIENT_SERVERNAME=localhost \
+    QVS_DELEGATING_ATTESTATION_CERT_FILE=/QVS/configuration-default/certificates/internal_ca/ca.crt
 
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/QVS/native/lib \
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/QVS/native/lib:/gramine/meson_build_output/lib/x86_64-linux-gnu \
     NODE_ENV=production
     # OPENSSL_CONF=/QVS/src/fips/openssl.cnf \
     # OPENSSL_MODULES=/QVS/src/fips

@@ -1,9 +1,12 @@
 sgx.enclave_size = "4G"
 sgx.max_threads = 16
+sgx.debug = false
 
 sgx.trusted_files = [
   "file:/gramine/app_files/entrypoint.manifest",  # unused entry, only to test merging of manifests
 ]
+
+loader.log_level = "error"
 
 # For gsc customize
 sgx.preheat_enclave = true
@@ -14,3 +17,7 @@ sgx.allowed_files = [
 libos.check_invalid_pointers = false
 sys.insecure__allow_eventfd = true
 sys.enable_extra_runtime_domain_names_conf = true
+
+sgx.remote_attestation = "dcap"
+sgx.ra_client_spid = "0"
+sgx.ra_client_linkable = false

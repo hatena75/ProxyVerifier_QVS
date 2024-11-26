@@ -37,6 +37,14 @@
 #include <SgxEcdsaAttestation/QuoteVerification.h>
 #include "BaseWorker.h"
 #include <openssl/evp.h>
+#include <openssl/ec.h>
+#include <openssl/bn.h>
+#include <openssl/rsa.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <cstdlib>
 
 namespace intel::sgx::dcap::qvlwrapper {
     class GenerateCSRWorker : public BaseWorker {
