@@ -57,10 +57,10 @@ namespace intel::sgx::dcap::qvlwrapper {
         void Run() override;
         void OnOK() override;
 
-        EVP_PKEY* ec_delegation_pkey = NULL;
-
     private:
-        std::string result = "NA";
+        std::vector<unsigned char> delegationCert{};
+        std::vector<unsigned char> delegationPrivateKey{};
+        std::vector<unsigned char> delegationPublicKey{};
     };
 
 }

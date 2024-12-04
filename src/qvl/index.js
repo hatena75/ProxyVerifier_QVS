@@ -117,14 +117,13 @@ function loggerSetup(name, consoleLogLevel, fileLogLevel, fileName, pattern) {
     wrapper.loggerSetup(name, consoleLogLevel, fileLogLevel, fileName, pattern);
 }
 
-async function generateCSR(reqId, easylogger) {
+async function generateCSR(reqId) {
     try {
-        const result = await wrapper.generateCSR(reqId);
-        return { body: { status: 'OK', version: result.result } };
+        const certs = await wrapper.generateCSR(reqId);
+        return { body: { status: 'SUCCESS', DelegationCert: certs.DelegationCert, DelegationPrivateKey: certs.DelegationPrivateKey } };
     }
     catch (e) {
-        easylogger = 'Failed to generateCSR';
-        return { body: { status: 'FAILED', version: 'NA' } };
+        return { body: { status: 'FAILED', DelegationCert: null, DelegationPrivateKey: null } };
     }
 }
 

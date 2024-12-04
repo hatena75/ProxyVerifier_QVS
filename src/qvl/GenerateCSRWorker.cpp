@@ -33,6 +33,8 @@
 extern "C" {
 #include <secret_prov.h>
 }
+#include <sys/time.h>
+#define printf(...) (void)0 //for evaluation
 
 namespace intel::sgx::dcap::qvlwrapper {
 
@@ -109,6 +111,11 @@ namespace intel::sgx::dcap::qvlwrapper {
     }
 
     void GenerateCSRWorker::Run()  {
+        //for evaluation
+        struct timeval start, end;
+        long seconds, useconds;
+        double elapsed;
+
         int ret;
 
         uint8_t* secret1 = NULL;
@@ -127,8 +134,10 @@ namespace intel::sgx::dcap::qvlwrapper {
             printf("Error: CSR generation failed\n");
         }
 
+        // 開始時刻の取得
+        gettimeofday(&start, NULL);
+
         const char* CA_CRT_PATH = std::getenv("QVS_DELEGATING_ATTESTATION_CERT_FILE");
-        fprintf(stderr, "[debug] QVS_DELEGATING_ATTESTATION_CERT_FILE is %s\n", CA_CRT_PATH);
         struct ra_tls_ctx* ctx = NULL;
         ret = secret_provision_start("dummyserver:80;localhost:4433;anotherdummy:4433",
                                     CA_CRT_PATH, &ctx);
@@ -205,30 +214,33 @@ namespace intel::sgx::dcap::qvlwrapper {
             //goto out;
         }
 
-        // verifying cert with corresponding private key.
-        if (X509_check_private_key(p_x509, ec_delegation_pkey)) {
-            printf("The certificate and private key match.\n");
-        } else {
-            printf("The certificate and private key do NOT match.\n");
+        // for My output
+        delegationCert.assign(certder, certder + cert_len);
+
+        unsigned char *der_tempbuf = NULL;
+        int der_len = i2d_PrivateKey(ec_delegation_pkey, &der_tempbuf);
+        if (der_len < 0) {
+            printf("Error: Failed to encode private key to DER\n");
         }
+        delegationPrivateKey.assign(der_tempbuf, der_tempbuf + der_len);
 
-        //if(X509_REQ_verify(p_x509_req, ec_delegation_pkey) != 1) printf("X509_REQ_verify error\n");
+        // 終了時刻の取得
+        gettimeofday(&end, NULL);
 
-        //Output csr to file
-        // FILE *csr_file;
-        // csr_file = fopen("delegation.csr", "wb");
-        // if(csr_file == NULL) printf("csr_file error\n");
-        // if(!PEM_write_X509_REQ(csr_file, p_x509_req)){
-        //     printf("PEM_write_X509_REQ error\n");
+        // 経過時間を計算（秒とマイクロ秒の差分を合算）
+        seconds  = end.tv_sec  - start.tv_sec;
+        useconds = end.tv_usec - start.tv_usec;
+        elapsed = seconds + useconds / 1000000.0;
+
+        // stderrに結果を出力
+        fprintf(stderr, "Elapsed time: %f seconds\n", elapsed);
+
+        // verifying cert with corresponding private key.
+        // if (X509_check_private_key(p_x509, ec_delegation_pkey)) {
+        //     printf("The certificate and private key match.\n");
+        // } else {
+        //     printf("The certificate and private key do NOT match.\n");
         // }
-        // fclose(csr_file);
-
-        // FILE *key_file;
-        // key_file = fopen("delegationkey.pem", "wb");
-        // if (!PEM_write_PrivateKey(key_file, ec_delegation_pkey, NULL, NULL, 0, 0, NULL)) {
-        //     printf("PEM_write_PrivateKey error\n");
-        // }
-        // fclose(key_file);
 
         free(secret1);
         free(csr_der);
@@ -239,7 +251,10 @@ namespace intel::sgx::dcap::qvlwrapper {
 
     void GenerateCSRWorker::OnOK() {
         auto returnObj = Napi::Object::New(Env());
-        returnObj.Set("result", result);
+        auto buffer = Napi::Buffer<uint8_t>::Copy(Env(), delegationCert.data(), delegationCert.size());
+        returnObj.Set("DelegationCert", buffer);
+        buffer = Napi::Buffer<uint8_t>::Copy(Env(), delegationPrivateKey.data(), delegationPrivateKey.size());
+        returnObj.Set("DelegationPrivateKey", buffer);
         promise.Resolve(returnObj);
     }
 }

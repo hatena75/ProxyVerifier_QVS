@@ -52,6 +52,7 @@ const crypto = require('node:crypto');
 //const promises = require('node:fs/promises');
 const fs = require(`fs`);
 const path = require(`path`);
+const delegateditems = require('../delegateditems');
 
 const uriString = 'URI:';
 
@@ -237,20 +238,11 @@ async function verifyAttestationEvidence(ctx) {
             report.configuration = configuration;
         }
 
-        /* My function: delegation key signs report */
-        //const keystring = await promises.readFile('/QVS/delegationkey.pem', 'utf8');
-        //const privatekey = crypto.createPrivateKey(keystring);
-        const privateKey = fs.readFileSync(path.resolve('/QVS/delegationkey.pem'), "utf8");
-        const data = report.toString('base64');
-        const signer = crypto.createSign('SHA256');
-        signer.update(data);
-        const delegationSignature = signer.sign(privateKey, 'base64');
-        //console.log('delegationsignature :', delegationSignature);
-        //console.log('data : ', data);
-        ctx.set('DelegationSignature', delegationSignature);
-
-        await signReport(report, ctx);
-
+        /* My function: delegation private key signs report */
+        await delegationSignReport(report, ctx);
+        
+        // imitation of IAS server (identifying server).
+        // await signReport(report, ctx);
         /*
             #swagger.responses[200] = {
                 schema: {
@@ -266,7 +258,7 @@ async function verifyAttestationEvidence(ctx) {
             }
          */
         ctx.status = 200;
-        ctx.body = report;
+        ctx.body = JSON.stringify(report);
     }
     catch (error) {
         /*
@@ -568,6 +560,52 @@ async function signReport(report, ctx) {
     }
     const signature = signResponse.body.signature;
     ctx.set('X-IASReport-Signature', signature);
+}
+
+/**
+ * Myfunction: DelegatedPrivateKey signs report structure.
+ * Sets X-Delegating-Certificate and X-Delegating-Signature headers.
+ * @param {*} report to sign
+ * @param {*} ctx - koa context
+ */
+async function delegationSignReport(report, ctx) {
+    // If provisioning has not done yet, do it here.
+    if(delegateditems.getDelegationCert() == null) {
+        const response = await qvl.generateCSR('verification-request-id');
+        
+        if(response.body.status != 'SUCCESS'){
+            throw new Error('generateCSR fail: ' + response.body.status);
+        }
+
+        delegateditems.setDelegationCert(response.body.DelegationCert);
+        delegateditems.setDelegationPrivateKey(response.body.DelegationPrivateKey);
+    }
+
+    // DER to PEM
+    const derCert = delegateditems.getDelegationCert();
+    const base64Cert = derCert.toString('base64');
+    const pemCert = `-----BEGIN CERTIFICATE-----\n${base64Cert.match(/.{1,64}/g).join("\n")}\n-----END CERTIFICATE-----`;
+    //console.log(pemCert);
+    const pemCertForHttp = Buffer.from(pemCert).toString('base64');
+    //console.log(pemCertForHttp);
+    ctx.set('X-Delegating-Certificate', pemCertForHttp);
+
+
+    const derKey = delegateditems.getDelegationPrivateKey();
+    const privateKey = crypto.createPrivateKey({
+        key: derKey,
+        format: "der",
+        type: "sec1",
+    });
+
+    const signer = crypto.createSign("sha256");
+    signer.update(JSON.stringify(report));
+    signer.end();
+    // console.log(JSON.stringify(report));
+    // console.log(crypto.createHash("sha256").update(JSON.stringify(report)).digest("hex"));
+    const delegationSignature = signer.sign(privateKey);
+    const base64DelegationSignature = delegationSignature.toString('base64');
+    ctx.set('X-Delegating-Signature', base64DelegationSignature);
 }
 
 /**

@@ -34,21 +34,30 @@
 const qvl = require('../qvl');
 //const config = require('../configLoader').getConfig();
 //const logger = require('../logger')(config);
+const crypto = require('node:crypto');
+
+const delegateditems = require('../delegateditems');
 
 /**
  * Handler for generate CSR endpoint
  * @param {Object} ctx - koa context
  * @returns
  */
-async function generateCSR(ctx) {    
+async function generateCSR(ctx) {
     console.log('start generate CSR');
-    let easylogger;
     // The CSR is generated within C++ of this caller.
-    const response = await qvl.generateCSR('genCSR-request-id', easylogger);
-    if(response.body.status != 'OK') console.log(easylogger);
+    const response = await qvl.generateCSR('api-request-id');
+    if(response.body.status != 'SUCCESS') console.log(response.body.status);
 
-    ctx.body = response.body.version;
+    ctx.body = response.body.status;
     ctx.status = 200;
+
+    delegateditems.setDelegationCert(response.body.DelegationCert);
+    delegateditems.setDelegationPrivateKey(response.body.DelegationPrivateKey);
+
+    console.log('DelegationCert: %s\n', delegateditems.getDelegationCert().toString("hex"));
+    console.log('DelegationPrivateKey: %s\n', delegateditems.getDelegationPrivateKey().toString("hex"));
+
 }
 
 module.exports = {
