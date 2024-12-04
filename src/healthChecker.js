@@ -60,7 +60,7 @@ async function handleHealthConditionCallback(svcClientHealth, logger, reqId, cal
 }
 
 koaHealthCache.addComponentHealthCondition('VerificationCryptoService', async(logger, reqId, callback) => {
-    return handleHealthConditionCallback(vcsHealth, logger, reqId, callback);
+    // return handleHealthConditionCallback(vcsHealth, logger, reqId, callback);
 });
 
 koaHealthCache.addComponentHealthCondition('QuoteVerificationLibrary', async(logger, reqId, callback) => {

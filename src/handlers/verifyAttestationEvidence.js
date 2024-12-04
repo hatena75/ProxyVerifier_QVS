@@ -42,7 +42,7 @@ const crl = require('../clients/crlAccessLayer/CRLClient');
 const qvl = require('../qvl');
 const qvlStatus = require('../qvl/status');
 const errorSource = require('../qvl/verifyQuoteErrorSource');
-const vcs = require('../clients/vcsAccessLayer/VCSClient');
+// const vcs = require('../clients/vcsAccessLayer/VCSClient');
 const config = require('../configLoader').getConfig();
 const STATUSES = require('../koa/response').STATUSES;
 const random = require('../util/random');
@@ -534,33 +534,33 @@ function readQeIdentityFromResponse(response) {
  * @param {*} report to sign
  * @param {*} ctx - koa context
  */
-async function signReport(report, ctx) {
-    /*
-        #swagger.responses[200] = {
-            headers: {
-                'Request-ID': {
-                    description: 'Request ID',
-                    type: 'string'
-                },
-                'X-IASReport-Signing-Certificate': {
-                    description: 'URL encoded Attestation Report Signing Certificate chain in PEM format (all certificates in the chain, appended to each other)',
-                    type: 'string'
-                },
-                'X-IASReport-Signature': {
-                    description: 'Base 64-encoded Report Signature',
-                    type: 'string'
-                }
-            }
-        }
-     */
-    ctx.set('X-IASReport-Signing-Certificate', attestationReportSigningChain);
-    const signResponse = await vcs.signVerificationReport(report, ctx.reqId, ctx.log);
-    if (signResponse.status !== STATUSES.STATUS_OK.httpCode) {
-        throw new Error('Failed to sign the report. VCS returned status: ' + signResponse.status);
-    }
-    const signature = signResponse.body.signature;
-    ctx.set('X-IASReport-Signature', signature);
-}
+// async function signReport(report, ctx) {
+//     /*
+//         #swagger.responses[200] = {
+//             headers: {
+//                 'Request-ID': {
+//                     description: 'Request ID',
+//                     type: 'string'
+//                 },
+//                 'X-IASReport-Signing-Certificate': {
+//                     description: 'URL encoded Attestation Report Signing Certificate chain in PEM format (all certificates in the chain, appended to each other)',
+//                     type: 'string'
+//                 },
+//                 'X-IASReport-Signature': {
+//                     description: 'Base 64-encoded Report Signature',
+//                     type: 'string'
+//                 }
+//             }
+//         }
+//      */
+//     ctx.set('X-IASReport-Signing-Certificate', attestationReportSigningChain);
+//     const signResponse = await vcs.signVerificationReport(report, ctx.reqId, ctx.log);
+//     if (signResponse.status !== STATUSES.STATUS_OK.httpCode) {
+//         throw new Error('Failed to sign the report. VCS returned status: ' + signResponse.status);
+//     }
+//     const signature = signResponse.body.signature;
+//     ctx.set('X-IASReport-Signature', signature);
+// }
 
 /**
  * Myfunction: DelegatedPrivateKey signs report structure.
