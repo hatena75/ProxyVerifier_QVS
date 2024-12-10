@@ -173,7 +173,9 @@ ENV QVS_SERVICE_CERT_FILE=certificates/qvs-cert.pem \
     QVS_VCS_CLIENT_KEY_FILE=certificates/qvs-to-sss-client-key.pem \
     QVS_ATTESTATION_REPORT_SIGNING_CERTIFICATE=SIGNING_KEY_CERTIFCATE_URL_ENCODED \
     QVS_VCS_CLIENT_SERVERNAME=localhost \
-    QVS_DELEGATING_ATTESTATION_CERT_FILE=/QVS/configuration-default/certificates/internal_ca/ca.crt
+    QVS_DELEGATING_ATTESTATION_CERT_FILE=/QVS/configuration-default/certificates/internal_ca/ca.crt \
+    QVS_CACHE_MAX_KEYS=0 \
+    QVS_LOGGER_LEVEL_CONSOLE=info
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/QVS/native/lib:/gramine/meson_build_output/lib/x86_64-linux-gnu \
     NODE_ENV=production

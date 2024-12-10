@@ -44,7 +44,7 @@ const cacheConfig = {
 const clientsCacheConfig = {
     stdTTL:      0,  // 0 is unlimited
     checkperiod: 0,  // no periodic check
-    maxKeys:     -1, // -1 is unlimited, 0 turns off caching
+    maxKeys:     0, // -1 is unlimited, 0 turns off caching
 };
 
 const cache = {
