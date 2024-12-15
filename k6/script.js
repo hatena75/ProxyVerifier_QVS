@@ -5,7 +5,7 @@ export const options = {
   // A number specifying the number of VUs to run concurrently.
   //vus: 11,
   // A string specifying the total duration of the test run.
-  duration: '10s',
+  duration: '1m',
   // curl corresponding -k
   insecureSkipTLSVerify: true,
 };
@@ -24,4 +24,5 @@ const quote = open('../attested.json');
 
 export default function() {
   http.post(url, quote, { headers: { 'Content-Type': 'application/json' } });
+  sleep(1);
 }

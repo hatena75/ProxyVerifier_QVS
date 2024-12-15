@@ -111,11 +111,6 @@ namespace intel::sgx::dcap::qvlwrapper {
     }
 
     void GenerateCSRWorker::Run()  {
-        //for evaluation
-        struct timeval start, end;
-        long seconds, useconds;
-        double elapsed;
-
         int ret;
 
         uint8_t* secret1 = NULL;
@@ -133,9 +128,6 @@ namespace intel::sgx::dcap::qvlwrapper {
         if (csr_der == NULL) {
             printf("Error: CSR generation failed\n");
         }
-
-        // 開始時刻の取得
-        gettimeofday(&start, NULL);
 
         const char* CA_CRT_PATH = std::getenv("QVS_DELEGATING_ATTESTATION_CERT_FILE");
         struct ra_tls_ctx* ctx = NULL;
@@ -176,11 +168,11 @@ namespace intel::sgx::dcap::qvlwrapper {
             fprintf(stderr, "[error] secret_provision_write(csr) returned %d\n", ret);
             //goto out;
         }
-        printf("--- Sent client CSR(DER) ---\n");
-        for (int i = 0; i < csr_len; i++) {
-            printf("%02X", csr_der[i]);
-        }
-        printf("\n");
+        // printf("--- Sent client CSR(DER) ---\n");
+        // for (int i = 0; i < csr_len; i++) {
+        //     printf("%02X", csr_der[i]);
+        // }
+        // printf("\n");
 
 
         // listen on cert_len
@@ -202,8 +194,8 @@ namespace intel::sgx::dcap::qvlwrapper {
             //goto out;
         }
         //certder[sizeof(cert) - 1] = '\0';
-        printf("--- Received certder ---\n");
-        print_hash(certder, sizeof(certder));
+        // printf("--- Received certder ---\n");
+        // print_hash(certder, sizeof(certder));
 
         
         const unsigned char* certder_tmp = (unsigned char*)certder; // for converting d2i
@@ -223,17 +215,6 @@ namespace intel::sgx::dcap::qvlwrapper {
             printf("Error: Failed to encode private key to DER\n");
         }
         delegationPrivateKey.assign(der_tempbuf, der_tempbuf + der_len);
-
-        // 終了時刻の取得
-        gettimeofday(&end, NULL);
-
-        // 経過時間を計算（秒とマイクロ秒の差分を合算）
-        seconds  = end.tv_sec  - start.tv_sec;
-        useconds = end.tv_usec - start.tv_usec;
-        elapsed = seconds + useconds / 1000000.0;
-
-        // stderrに結果を出力
-        fprintf(stderr, "Elapsed time: %f seconds\n", elapsed);
 
         // verifying cert with corresponding private key.
         // if (X509_check_private_key(p_x509, ec_delegation_pkey)) {

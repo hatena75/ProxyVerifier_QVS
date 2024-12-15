@@ -55,8 +55,8 @@ async function generateCSR(ctx) {
     delegateditems.setDelegationCert(response.body.DelegationCert);
     delegateditems.setDelegationPrivateKey(response.body.DelegationPrivateKey);
 
-    console.log('DelegationCert: %s\n', delegateditems.getDelegationCert().toString("hex"));
-    console.log('DelegationPrivateKey: %s\n', delegateditems.getDelegationPrivateKey().toString("hex"));
+    //console.log('DelegationCert: %s\n', delegateditems.getDelegationCert().toString("hex"));
+    //console.log('DelegationPrivateKey: %s\n', delegateditems.getDelegationPrivateKey().toString("hex"));
 
 }
 
