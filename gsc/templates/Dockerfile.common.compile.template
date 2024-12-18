@@ -11,7 +11,8 @@ RUN git clone {{Gramine.Repository}} /gramine
 
 RUN cd /gramine \
     && git fetch origin {{Gramine.Branch}} \
-    && git checkout {{Gramine.Branch}}
+    && git checkout {{Gramine.Branch}} \
+    && git checkout 115ffeeb72e13a2a6cab9b11160109f171832c60
 
 {% if "linux-sgx-driver" in SGXDriver.Repository %}
 RUN cd /gramine \

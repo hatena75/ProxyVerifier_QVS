@@ -51,7 +51,8 @@ RUN git clone https://github.com/gramineproject/gramine.git /gramine
 
 RUN cd /gramine \
     && git fetch origin master \
-    && git checkout master
+    && git checkout master \
+    && git checkout 115ffeeb72e13a2a6cab9b11160109f171832c60
         
         
 RUN mkdir -p /gramine/driver/asm \
@@ -164,6 +165,8 @@ ENV PATH="/gramine/meson_build_output/bin:$PATH"
 
 # For QVS (my modification)
 COPY --chown=node:node configuration-default/certificates /QVS/configuration-default/certificates
+# genCSR (communicating to secret_prov sample)
+COPY --chown=node:node ra-tls-secret-prov/ssl/ca.crt /QVS/configuration-default/certificates/internal_ca
 ENV QVS_SERVICE_CERT_FILE=certificates/qvs-cert.pem \
     QVS_SERVICE_KEY_FILE=certificates/qvs-key.pem \
     QVS_SERVICE_TLS_SERVER_TYPE=TLS \
