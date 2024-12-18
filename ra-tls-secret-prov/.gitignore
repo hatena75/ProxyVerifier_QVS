@@ -13,3 +13,13 @@
 
 /ssl/ca.*
 /ssl/server.*
+
+/secret_prov_minimal/client.sig
+/secret_prov_minimal/client.manifest.sgx
+/secret_prov_minimal/client.manifest
+/secret_prov/client.sig
+/secret_prov/client.manifest.sgx
+/secret_prov/client.manifest
+/secret_prov_pf/client.sig  
+/secret_prov_pf/client.manifest.sgx
+/secret_prov_pf/client.manifest
