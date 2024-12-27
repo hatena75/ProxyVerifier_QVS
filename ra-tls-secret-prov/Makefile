@@ -96,7 +96,7 @@ sgx_sign_secret_prov_minimal_client: secret_prov_minimal/client.manifest secret_
 	cd secret_prov_minimal && \
 	gramine-sgx-sign \
 		--manifest $(notdir $<) \
-		--key /home/yagawa/ProxyVerifier_QVS/ra-tls-secret-prov/enclave-key.pem \
+		--key /home/$(USER)/ProxyVerifier_QVS/ra-tls-secret-prov/enclave-key.pem \
 		--output $(notdir $<.sgx)
 
 ############################### CLIENT MANIFEST ###############################
@@ -119,7 +119,7 @@ sgx_sign_secret_prov_client: secret_prov/client.manifest secret_prov/client
 	cd secret_prov && \
 	gramine-sgx-sign \
 		--manifest $(notdir $<) \
-		--key /home/yagawa/ProxyVerifier_QVS/ra-tls-secret-prov/enclave-key.pem \
+		--key /home/$(USER)/ProxyVerifier_QVS/ra-tls-secret-prov/enclave-key.pem \
 		--output $(notdir $<.sgx)
 
 ############################## PF CLIENT MANIFEST #############################
@@ -142,7 +142,7 @@ sgx_sign_secret_prov_pf_client: secret_prov_pf/client.manifest secret_prov_pf/cl
 	cd secret_prov_pf && \
 	gramine-sgx-sign \
 		--manifest $(notdir $<) \
-		--key /home/yagawa/ProxyVerifier_QVS/ra-tls-secret-prov/enclave-key.pem \
+		--key /home/$(USER)/ProxyVerifier_QVS/ra-tls-secret-prov/enclave-key.pem \
 		--output $(notdir $<.sgx)
 
 ########################## PREPARE PROTECTED FILES ############################

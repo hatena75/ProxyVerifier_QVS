@@ -1,4 +1,4 @@
-sgx.enclave_size = "4G"
+sgx.enclave_size = "2G"
 sgx.max_threads = 16
 sgx.debug = false
 

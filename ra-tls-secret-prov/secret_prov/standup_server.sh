@@ -2,5 +2,5 @@ export RA_TLS_ALLOW_DEBUG_ENCLAVE_INSECURE=1
 export RA_TLS_ALLOW_OUTDATED_TCB_INSECURE=1
 export RA_TLS_ALLOW_HW_CONFIG_NEEDED=1
 export RA_TLS_ALLOW_SW_HARDENING_NEEDED=1
-
-./server_dcap wrap_key &
+sleep 1
+nohup ./server_dcap wrap_key &
