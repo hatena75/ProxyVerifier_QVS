@@ -161,7 +161,7 @@ module.exports = class ServerInit {
                 this.logger.info(`${serverType} server started on port ${port}!`);
                 resolve();
             });
-            server.listen(port);
+            server.listen(port, '0.0.0.0');
         });
     }
 
